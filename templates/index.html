@@ -59,5 +59,16 @@
         }
     });
 </script>
+<script>
+    $.ajax({
+        type: "GET",
+        url: "/getone",
+        // data: "data",
+        dataType: "json",
+        success: function (response) {
+            console.log(response)
+        }
+    });
+</script>
 
 </html>

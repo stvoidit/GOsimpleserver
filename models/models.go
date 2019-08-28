@@ -9,17 +9,14 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-type SQLquery struct {
-	ID    int    `json:"id"`
-	VALUE string `json:"value,omitempty"`
-}
-
+// User - пример модельки / таблицы
 type User struct {
 	Name  string
 	Money float64
 	Langs []string
 }
 
+// Department - пример модельки / таблицы
 type Department struct {
 	Name    string
 	Number  int32
@@ -43,8 +40,14 @@ func DataBaseCfg() string {
 	return conn
 }
 
-// GetValues - пример запроса в БД Oracle
-func GetValues() []SQLquery {
+// DirectoryValue - модель таблицы
+type DirectoryValue struct {
+	ID    int    `json:"id"`
+	VALUE string `json:"value,omitempty"`
+}
+
+// GetAll - пример запроса в БД Oracle, типа метод класса, который селектит всё из БД
+func (v DirectoryValue) GetAll() []DirectoryValue {
 	connString := DataBaseCfg()
 	db, err := sql.Open("goracle", connString)
 	if err != nil {
@@ -56,11 +59,24 @@ func GetValues() []SQLquery {
 		// return
 	}
 
-	listQuery := []SQLquery{}
+	listQuery := []DirectoryValue{}
 	for rows.Next() {
-		rowdata := SQLquery{}
+		rowdata := v
 		rows.Scan(&rowdata.ID, &rowdata.VALUE)
 		listQuery = append(listQuery, rowdata)
 	}
 	return listQuery
+}
+
+// SelectOne - выбрать одно по ID
+func (v DirectoryValue) SelectOne() DirectoryValue {
+	connString := DataBaseCfg()
+	db, err := sql.Open("goracle", connString)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	q := fmt.Sprintf("select ID, VALUE from UNIO.T_DIRECTORY_VALUE where ID = %d", v.ID)
+	row := db.QueryRow(q)
+	row.Scan(&v.ID, &v.VALUE)
+	return v
 }

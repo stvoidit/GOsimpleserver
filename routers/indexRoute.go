@@ -54,7 +54,17 @@ func AjaxDepartment(w http.ResponseWriter, r *http.Request) {
 // AjaxDB - запрос к БД
 func AjaxDB(w http.ResponseWriter, r *http.Request) {
 	logRequest(r)
-	Data := models.GetValues()
+	q := models.DirectoryValue{}
+	Data := q.GetAll()
+	respJSON, _ := json.Marshal(Data)
+	fmt.Fprint(w, string(respJSON))
+}
+
+// AjaxGetOne - выбрать одно значение
+func AjaxGetOne(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
+	q := models.DirectoryValue{ID: 2816}
+	Data := q.SelectOne()
 	respJSON, _ := json.Marshal(Data)
 	fmt.Fprint(w, string(respJSON))
 }
