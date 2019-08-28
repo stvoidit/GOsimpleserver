@@ -48,5 +48,16 @@
         }
     });
 </script>
+<script>
+    $.ajax({
+        type: "GET",
+        url: "/db",
+        // data: "data",
+        dataType: "json",
+        success: function (response) {
+            console.log(response)
+        }
+    });
+</script>
 
 </html>

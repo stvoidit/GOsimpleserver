@@ -50,3 +50,11 @@ func AjaxDepartment(w http.ResponseWriter, r *http.Request) {
 	respJSON, _ := json.Marshal(Data)
 	fmt.Fprint(w, string(respJSON))
 }
+
+// AjaxDB - запрос к БД
+func AjaxDB(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
+	Data := models.GetValues()
+	respJSON, _ := json.Marshal(Data)
+	fmt.Fprint(w, string(respJSON))
+}
