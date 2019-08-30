@@ -35,15 +35,17 @@ func IndexRoute(w http.ResponseWriter, r *http.Request) {
 	// logRequest(r)
 	canEntry := []string{"Admin", "Moderator"}
 	check := RoleVerify(w, r, canEntry)
-	if check {
-		tmp, _ := template.ParseFiles("./templates/index.html")
-		tmp.Execute(w, "Hello")
+	// Если проверка не прошла - возвращаем всё, что успело записаться в ответ (т.е. ошибка 403)
+	if !check {
+		return
 	}
+	tmp, _ := template.ParseFiles("./templates/index.html")
+	tmp.Execute(w, "Hello")
 }
 
 // AjaxUsers - 1 query
 func AjaxUsers(w http.ResponseWriter, r *http.Request) {
-	// logRequest(r)
+	logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
 	Data := models.User{
 		Name:  "Max",
@@ -118,6 +120,7 @@ func RoleVerify(w http.ResponseWriter, r *http.Request, roles []string) bool {
 		}
 	}
 	return valid
+
 }
 
 // Login - типа авторизация
