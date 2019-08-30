@@ -22,6 +22,40 @@ const (
 	sesKeyLogin sesKey = iota
 )
 
+// RoleVerify - проверка роли
+func RoleVerify(w http.ResponseWriter, r *http.Request, roles []string) bool {
+	type ChCh func() bool // Объявление типа функции, используем как подобие лямбды
+	ses, _ := cookieStore.Get(r, cookieName)
+	data := ses.Values[sesKeyLogin]
+	var valid bool
+	if data == nil {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("bad verify"))
+	} else {
+		// check - типа лямбда, возвращет bool, есть ли роль в списке перечисленных у роута
+		var check ChCh = func() bool {
+			var roleRequered bool
+			for _, v := range roles {
+				if data == v {
+					roleRequered = true
+					break
+				} else {
+					roleRequered = false
+				}
+			}
+			return roleRequered
+		}
+		// Вызов лямбды, присваивание флага верификации
+		// Если salse, то возвращаем так же ошибку
+		valid = check()
+		if !valid {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("bad verify"))
+		}
+	}
+	return valid
+}
+
 // logRequest - логгер/принтер в консоль данных о запросе
 func logRequest(r *http.Request) {
 	const dtFormat = "2006-01-02 03:04:05"
@@ -33,15 +67,12 @@ func logRequest(r *http.Request) {
 // Передача параметров в template
 func IndexRoute(w http.ResponseWriter, r *http.Request) {
 	// logRequest(r)
-	ses, _ := cookieStore.Get(r, cookieName)
-	login, ok := ses.Values[sesKeyLogin].(string)
-	if !ok {
-		fmt.Println("not role")
-	} else {
-		fmt.Println(login)
+	canEntry := []string{"Admin", "Moderator"}
+	check := RoleVerify(w, r, canEntry)
+	if check {
+		tmp, _ := template.ParseFiles("./templates/index.html")
+		tmp.Execute(w, "Hello")
 	}
-	tmp, _ := template.ParseFiles("./templates/index.html")
-	tmp.Execute(w, "Hello")
 }
 
 // AjaxUsers - 1 query
@@ -53,6 +84,7 @@ func AjaxUsers(w http.ResponseWriter, r *http.Request) {
 		Money: 2332.33,
 		Langs: []string{"RU", "ENG"},
 	}
+
 	respJSON, _ := json.Marshal(Data)
 	w.Write(respJSON)
 }
@@ -92,13 +124,11 @@ func AjaxGetOne(w http.ResponseWriter, r *http.Request) {
 func Login(w http.ResponseWriter, r *http.Request) {
 	gob.Register(sesKey(0))
 	ses, _ := cookieStore.Get(r, cookieName)
-	ses.Values[sesKeyLogin] = "User1"
+	ses.Values[sesKeyLogin] = "Admin"
 	ses.Options.HttpOnly = false
 	ses.Options.Secure = false
 	ses.Options.MaxAge = 86400 // 1 day exp
 	// ses.Options.Domain = "localhost"
-	fmt.Println(ses)
-	fmt.Println(ses.Options)
 	cookieStore.Save(r, w, ses)
 	w.Write([]byte("You are loggin"))
 }
