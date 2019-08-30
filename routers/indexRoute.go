@@ -32,10 +32,11 @@ func logRequest(r *http.Request) {
 // IndexRoute = is '/'
 // Передача параметров в template
 func IndexRoute(w http.ResponseWriter, r *http.Request) {
-	// logRequest(r)
+	logRequest(r)
+	// Перечисляем роли, которые имеют доступ
 	canEntry := []string{"Admin", "Moderator"}
-	check := RoleVerify(w, r, canEntry)
 	// Если проверка не прошла - возвращаем всё, что успело записаться в ответ (т.е. ошибка 403)
+	check := RoleVerify(w, r, canEntry)
 	if !check {
 		return
 	}
