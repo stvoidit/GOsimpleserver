@@ -22,40 +22,6 @@ const (
 	sesKeyLogin sesKey = iota
 )
 
-// RoleVerify - проверка роли
-func RoleVerify(w http.ResponseWriter, r *http.Request, roles []string) bool {
-	type ChCh func() bool // Объявление типа функции, используем как подобие лямбды
-	ses, _ := cookieStore.Get(r, cookieName)
-	data := ses.Values[sesKeyLogin]
-	var valid bool
-	if data == nil {
-		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte("bad verify"))
-	} else {
-		// check - типа лямбда, возвращет bool, есть ли роль в списке перечисленных у роута
-		var check ChCh = func() bool {
-			var roleRequered bool
-			for _, v := range roles {
-				if data == v {
-					roleRequered = true
-					break
-				} else {
-					roleRequered = false
-				}
-			}
-			return roleRequered
-		}
-		// Вызов лямбды, присваивание флага верификации
-		// Если salse, то возвращаем так же ошибку
-		valid = check()
-		if !valid {
-			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte("bad verify"))
-		}
-	}
-	return valid
-}
-
 // logRequest - логгер/принтер в консоль данных о запросе
 func logRequest(r *http.Request) {
 	const dtFormat = "2006-01-02 03:04:05"
@@ -118,6 +84,40 @@ func AjaxGetOne(w http.ResponseWriter, r *http.Request) {
 	Data := q.SelectOne()
 	respJSON, _ := json.Marshal(Data)
 	fmt.Fprint(w, string(respJSON))
+}
+
+// RoleVerify - проверка роли
+func RoleVerify(w http.ResponseWriter, r *http.Request, roles []string) bool {
+	type ChCh func() bool // Объявление типа функции, используем как подобие лямбды
+	ses, _ := cookieStore.Get(r, cookieName)
+	data := ses.Values[sesKeyLogin]
+	var valid bool
+	if data == nil {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("bad verify"))
+	} else {
+		// check - типа лямбда, возвращет bool, есть ли роль в списке перечисленных у роута
+		var check ChCh = func() bool {
+			var roleRequered bool
+			for _, v := range roles {
+				if data == v {
+					roleRequered = true
+					break
+				} else {
+					roleRequered = false
+				}
+			}
+			return roleRequered
+		}
+		// Вызов лямбды, присваивание флага верификации
+		// Если salse, то возвращаем так же ошибку
+		valid = check()
+		if !valid {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("bad verify"))
+		}
+	}
+	return valid
 }
 
 // Login - типа авторизация
