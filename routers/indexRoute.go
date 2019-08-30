@@ -93,6 +93,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	gob.Register(sesKey(0))
 	ses, _ := cookieStore.Get(r, cookieName)
 	ses.Values[sesKeyLogin] = "User1"
+	ses.Options.HttpOnly = false
+	ses.Options.Secure = false
+	ses.Options.MaxAge = 86400 // 1 day exp
+	// ses.Options.Domain = "localhost"
+	fmt.Println(ses)
+	fmt.Println(ses.Options)
 	cookieStore.Save(r, w, ses)
 	w.Write([]byte("You are loggin"))
 }
