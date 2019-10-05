@@ -11,9 +11,10 @@ import (
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", routers.IndexRoute)
-	r.HandleFunc("/user", routers.AjaxUsers)
-	r.HandleFunc("/dep", routers.AjaxDepartment)
+	// r.HandleFunc("/user", routers.AjaxUsers)
+	// r.HandleFunc("/dep", routers.AjaxDepartment)
 	r.HandleFunc("/login", routers.Login)
+	r.HandleFunc("/logout", routers.LogOut)
 	// http.HandleFunc("/db", routers.AjaxDB)
 	// http.HandleFunc("/getone", routers.AjaxGetOne)
 	http.ListenAndServe("0.0.0.0:9000", r)

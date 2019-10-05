@@ -2,24 +2,23 @@ package routers
 
 import (
 	"encoding/gob"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"text/template"
 	"time"
 
-	"../models"
+	// "../models"
 	"github.com/gorilla/sessions"
 )
 
-var cookieStore = sessions.NewCookieStore([]byte("MySecretKey"))
+const secretKey = "MySecretKey"
+const cookieName = "MySite"
 
-const cookieName = "Role"
-
-type sesKey int
+var cookieStore = sessions.NewCookieStore([]byte(secretKey))
 
 const (
-	sesKeyLogin sesKey = iota
+	sesKeyLogin      = 113223
+	sesKeyDepartment = 223325
 )
 
 // logRequest - логгер/принтер в консоль данных о запросе
@@ -40,54 +39,59 @@ func IndexRoute(w http.ResponseWriter, r *http.Request) {
 	if !check {
 		return
 	}
+	ses, _ := cookieStore.Get(r, cookieName)
+	role := ses.Values[sesKeyLogin]
+	dep := ses.Values[sesKeyDepartment]
+	fmt.Printf("%T", dep)
 	tmp, _ := template.ParseFiles("./templates/index.html")
-	tmp.Execute(w, "Hello")
+	message := fmt.Sprintf("%s %s %s", "Hello", role, dep)
+	tmp.Execute(w, message)
 }
 
 // AjaxUsers - 1 query
-func AjaxUsers(w http.ResponseWriter, r *http.Request) {
-	logRequest(r)
-	w.Header().Set("Content-Type", "application/json")
-	Data := models.User{
-		Name:  "Max",
-		Money: 2332.33,
-		Langs: []string{"RU", "ENG"},
-	}
+// func AjaxUsers(w http.ResponseWriter, r *http.Request) {
+// 	logRequest(r)
+// 	w.Header().Set("Content-Type", "application/json")
+// 	Data := models.User{
+// 		Name:  "Max",
+// 		Money: 2332.33,
+// 		Langs: []string{"RU", "ENG"},
+// 	}
 
-	respJSON, _ := json.Marshal(Data)
-	w.Write(respJSON)
-}
+// 	respJSON, _ := json.Marshal(Data)
+// 	w.Write(respJSON)
+// }
 
 // AjaxDepartment - 2 query
-func AjaxDepartment(w http.ResponseWriter, r *http.Request) {
-	// logRequest(r)
-	w.Header().Set("Content-Type", "application/json")
-	Data := models.Department{
-		Name:    `Отдел "Бухгалтерия"`,
-		Number:  2,
-		Country: "Russia",
-	}
-	respJSON, _ := json.Marshal(Data)
-	fmt.Fprint(w, string(respJSON))
-}
+// func AjaxDepartment(w http.ResponseWriter, r *http.Request) {
+// 	// logRequest(r)
+// 	w.Header().Set("Content-Type", "application/json")
+// 	Data := models.Department{
+// 		Name:    `Отдел "Бухгалтерия"`,
+// 		Number:  2,
+// 		Country: "Russia",
+// 	}
+// 	respJSON, _ := json.Marshal(Data)
+// 	fmt.Fprint(w, string(respJSON))
+// }
 
 // AjaxDB - запрос к БД
-func AjaxDB(w http.ResponseWriter, r *http.Request) {
-	// logRequest(r)
-	q := models.DirectoryValue{}
-	Data := q.GetAll()
-	respJSON, _ := json.Marshal(Data)
-	fmt.Fprint(w, string(respJSON))
-}
+// func AjaxDB(w http.ResponseWriter, r *http.Request) {
+// 	// logRequest(r)
+// 	q := models.DirectoryValue{}
+// 	Data := q.GetAll()
+// 	respJSON, _ := json.Marshal(Data)
+// 	fmt.Fprint(w, string(respJSON))
+// }
 
 // AjaxGetOne - выбрать одно значение
-func AjaxGetOne(w http.ResponseWriter, r *http.Request) {
-	// logRequest(r)
-	q := models.DirectoryValue{ID: 2816}
-	Data := q.SelectOne()
-	respJSON, _ := json.Marshal(Data)
-	fmt.Fprint(w, string(respJSON))
-}
+// func AjaxGetOne(w http.ResponseWriter, r *http.Request) {
+// 	// logRequest(r)
+// 	q := models.DirectoryValue{ID: 2816}
+// 	Data := q.SelectOne()
+// 	respJSON, _ := json.Marshal(Data)
+// 	fmt.Fprint(w, string(respJSON))
+// }
 
 // RoleVerify - проверка роли
 func RoleVerify(w http.ResponseWriter, r *http.Request, roles []string) bool {
@@ -126,13 +130,25 @@ func RoleVerify(w http.ResponseWriter, r *http.Request, roles []string) bool {
 
 // Login - типа авторизация
 func Login(w http.ResponseWriter, r *http.Request) {
-	gob.Register(sesKey(0))
+	gob.Register(sesKeyLogin)
 	ses, _ := cookieStore.Get(r, cookieName)
 	ses.Values[sesKeyLogin] = "Admin"
+	ses.Values[sesKeyDepartment] = "CEO"
 	ses.Options.HttpOnly = false
 	ses.Options.Secure = false
 	ses.Options.MaxAge = 86400 // 1 day exp
 	// ses.Options.Domain = "localhost"
 	cookieStore.Save(r, w, ses)
 	w.Write([]byte("You are loggin"))
+}
+
+// LogOut - сброс сессии
+func LogOut(w http.ResponseWriter, r *http.Request) {
+	gob.Register(sesKeyLogin)
+	ses, _ := cookieStore.Get(r, cookieName)
+	ses.Values[sesKeyLogin] = ""
+	ses.Values[sesKeyDepartment] = ""
+	ses.Options.MaxAge = -1
+	cookieStore.Save(r, w, ses)
+	w.Write([]byte("You are logout"))
 }
