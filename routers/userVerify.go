@@ -15,6 +15,15 @@ var secretKey = []byte("MySecretKey")
 
 var store *sessions.CookieStore
 
+func init() {
+	store = sessions.NewCookieStore(secretKey)
+	store.Options = &sessions.Options{
+		MaxAge:   60 * 15,
+		HttpOnly: true,
+	}
+	gob.Register(User{})
+}
+
 // User - cookies объект
 type User struct {
 	Role          string
@@ -23,7 +32,7 @@ type User struct {
 	Authenticated bool
 }
 
-func (u User) checkRole(roles []string, w http.ResponseWriter, r *http.Request) {
+func (u User) checkRole(roles []string, w http.ResponseWriter, r *http.Request) error {
 	var inArray bool
 	for _, val := range roles {
 		if u.Role == val {
@@ -34,18 +43,11 @@ func (u User) checkRole(roles []string, w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	if !inArray {
-		ref := fmt.Sprintf("?ref=%s", r.URL.Path)
-		http.Redirect(w, r, "/login"+ref, http.StatusFound)
+		// ref := fmt.Sprintf("?ref=%s", r.URL.Path)
+		// http.Redirect(w, r, "/login"+ref, http.StatusFound)
+		return errors.New("not validate")
 	}
-}
-
-func init() {
-	store = sessions.NewCookieStore(secretKey)
-	store.Options = &sessions.Options{
-		MaxAge:   60 * 15,
-		HttpOnly: true,
-	}
-	gob.Register(User{})
+	return nil
 }
 
 func getUser(s *sessions.Session) User {
@@ -60,7 +62,7 @@ func getUser(s *sessions.Session) User {
 
 // Login - авторизация
 func Login(w http.ResponseWriter, r *http.Request) {
-	ref := r.URL.Query().Get("ref")
+	// ref := r.URL.Query().Get("ref")
 	ses, _ := store.Get(r, "user")
 	user := &User{
 		Role:          "admin",
@@ -70,7 +72,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	ses.Values["user"] = user
 	_ = ses.Save(r, w)
-	http.Redirect(w, r, ref, http.StatusFound)
+	w.Write([]byte("you are login"))
+	// http.Redirect(w, r, ref, http.StatusFound)
 }
 
 // LogOut - сброс сессии
@@ -131,8 +134,25 @@ func ValidateToken(h http.Handler) http.Handler {
 	})
 }
 
+// ValidateCookies - валидация по cookies
+func ValidateCookies(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		validRoles := []string{"moderator", "admin"}
+		session, _ := store.Get(r, "user")
+		user := getUser(session)
+		fmt.Println(user)
+		err := user.checkRole(validRoles, w, r)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
 // TokenHandler - декоратор для api
 func TokenHandler(h http.Handler, adapters ...func(http.Handler) http.Handler) http.Handler {
+
 	for _, adapter := range adapters {
 		h = adapter(h)
 	}
