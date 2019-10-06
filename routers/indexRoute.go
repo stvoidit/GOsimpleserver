@@ -9,7 +9,8 @@ import (
 // IndexRoute = is '/'
 // Передача параметров в template
 func IndexRoute(w http.ResponseWriter, r *http.Request) {
-	message := fmt.Sprintf("%s you are %s!", "Hello", "ADMIN")
+	user := ses.GetUserData(r)
+	message := fmt.Sprintf("%s you are %s!", "Hello", user.Role)
 	w.Write([]byte(message))
 
 }

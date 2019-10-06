@@ -3,6 +3,7 @@ package routers
 import (
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -14,43 +15,24 @@ var secretKey = []byte("MySecretKey")
 
 var store *sessions.CookieStore
 
+// MySession - свой тип, копирующий CookieStore для расширения методов
+type MySession sessions.CookieStore
+
+var ses MySession
+
 func init() {
 	store = sessions.NewCookieStore(secretKey)
 	store.Options = &sessions.Options{
 		MaxAge:   60 * 15,
-		HttpOnly: true,
+		HttpOnly: false,
 	}
 	gob.Register(User{})
 }
 
-// User - cookies объект
-type User struct {
-	Role          string
-	UserID        int
-	Department    int
-	Authenticated bool
-}
-
-func (u User) checkRole(roles []string, w http.ResponseWriter, r *http.Request) error {
-	var inArray bool
-	for _, val := range roles {
-		if u.Role == val {
-			inArray = true
-			break
-		} else {
-			inArray = false
-		}
-	}
-	if !inArray {
-		// ref := fmt.Sprintf("?ref=%s", r.URL.Path)
-		// http.Redirect(w, r, "/login"+ref, http.StatusFound)
-		return errors.New("not validate")
-	}
-	return nil
-}
-
-func getUser(s *sessions.Session) User {
-	val := s.Values["user"]
+// GetUserData - расширение метода
+func (s MySession) GetUserData(r *http.Request) User {
+	session, _ := store.Get(r, "user")
+	val := session.Values["user"]
 	var user = User{}
 	user, ok := val.(User)
 	if !ok {
@@ -63,16 +45,37 @@ func getUser(s *sessions.Session) User {
 func Login(w http.ResponseWriter, r *http.Request) {
 	ref := r.URL.Query().Get("ref")
 	ses, _ := store.Get(r, "user")
-	user := &User{
-		Role:          "admin",
-		UserID:        2,
-		Department:    1,
-		Authenticated: true,
+	if r.Method == "POST" {
+		var Data struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+		_, err := JSONLoad(r, &Data)
+		if err != nil {
+			res := map[string]string{
+				"message": "Wrong login or password!",
+			}
+			Jsonify(w, res, 401)
+			return
+		}
+		user := &User{
+			Role:          "admin",
+			UserID:        2,
+			Department:    1,
+			Authenticated: true,
+		}
+		ses.Values["user"] = user
+		_ = ses.Save(r, w)
+		http.Redirect(w, r, ref, http.StatusFound)
+		return
 	}
-	ses.Values["user"] = user
-	_ = ses.Save(r, w)
-	// w.Write([]byte("you are login"))
-	http.Redirect(w, r, ref, http.StatusFound)
+	if r.Method == "GET" {
+		res := map[string]string{
+			"message": "Its login screen!",
+		}
+		Jsonify(w, res, 200)
+	}
+
 }
 
 // LogOut - сброс сессии
@@ -137,13 +140,13 @@ func ValidateToken(h http.Handler) http.Handler {
 }
 
 // ValidateCookies - валидация по cookies
-func ValidateCookies(h http.Handler, vr []string) http.Handler {
+func ValidateCookies(h http.Handler, filterRoles []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := store.Get(r, "user")
-		user := getUser(session)
-		err := user.checkRole(vr, w, r)
+		user := ses.GetUserData(r)
+		err := user.checkRole(filterRoles)
 		if err != nil {
-			w.Write([]byte(err.Error()))
+			ref := fmt.Sprintf("?ref=%s", r.URL.Path)
+			http.Redirect(w, r, "/login"+ref, 301)
 			return
 		}
 		h.ServeHTTP(w, r)
