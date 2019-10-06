@@ -15,6 +15,7 @@ var secretKey = []byte("MySecretKey")
 
 var store *sessions.CookieStore
 
+// User - cookies объект
 type User struct {
 	Role          string
 	UserID        int
@@ -94,21 +95,8 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(tokenString))
 }
 
-// APIValidate - валидация токена
-func APIValidate(w http.ResponseWriter, r *http.Request) {
-	bearer := strings.ContainsAny(r.Header.Get("Authorization"), "Bearer")
-	if bearer {
-		bearer := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
-		_, err := ValidateToken(bearer)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
-		}
-	}
-}
-
-// ValidateToken - валидация и возврат типа Юзер
-func ValidateToken(tokenString string) (User, error) {
+// checkToken - валидация
+func checkToken(tokenString string) (User, error) {
 	u := User{}
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -125,4 +113,28 @@ func ValidateToken(tokenString string) (User, error) {
 	}
 	return u, err
 
+}
+
+// ValidateToken - валидация токена api
+func ValidateToken(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		bearer := strings.ContainsAny(r.Header.Get("Authorization"), "Bearer")
+		if bearer {
+			bearer := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
+			_, err := checkToken(bearer)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
+// TokenHandler - декоратор для api
+func TokenHandler(h http.Handler, adapters ...func(http.Handler) http.Handler) http.Handler {
+	for _, adapter := range adapters {
+		h = adapter(h)
+	}
+	return h
 }

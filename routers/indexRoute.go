@@ -3,7 +3,6 @@ package routers
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 	// "../models"
 )
@@ -19,16 +18,16 @@ func logRequest(r *http.Request) {
 // Передача параметров в template
 func IndexRoute(w http.ResponseWriter, r *http.Request) {
 	// logRequest(r)
-	bearer := strings.ContainsAny(r.Header.Get("Authorization"), "Bearer")
-	if bearer {
-		bearer := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
-		user, err := ValidateToken(bearer)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
-		}
-		fmt.Println(user)
-	}
+	// bearer := strings.ContainsAny(r.Header.Get("Authorization"), "Bearer")
+	// if bearer {
+	// 	bearer := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
+	// 	user, err := ValidateToken(bearer)
+	// 	if err != nil {
+	// 		w.Write([]byte(err.Error()))
+	// 		return
+	// 	}
+	// 	fmt.Println(user)
+	// }
 
 	validRoles := []string{"moderator", "admin"}
 	session, _ := store.Get(r, "user")
