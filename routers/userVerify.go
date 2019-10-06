@@ -132,6 +132,7 @@ func ValidateToken(h http.Handler) http.Handler {
 				return
 			}
 		} else {
+			w.WriteHeader(403)
 			w.Write([]byte("Not validate token!"))
 			return
 		}
@@ -146,7 +147,7 @@ func ValidateCookies(h http.Handler, filterRoles []string) http.Handler {
 		err := user.checkRole(filterRoles)
 		if err != nil {
 			ref := fmt.Sprintf("?ref=%s", r.URL.Path)
-			http.Redirect(w, r, "/login"+ref, 301)
+			http.Redirect(w, r, "/login"+ref, 302)
 			return
 		}
 		h.ServeHTTP(w, r)
