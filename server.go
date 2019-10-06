@@ -10,6 +10,7 @@ import (
 
 func main() {
 	r := mux.NewRouter()
+	r.HandleFunc("/get-token", routers.GetTokenHandler)
 	r.HandleFunc("/", routers.IndexRoute)
 	r.HandleFunc("/test", routers.IndexRoute)
 	r.HandleFunc("/login", routers.Login)
