@@ -2,7 +2,9 @@ package main
 
 import (
 	"net/http"
+	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
 	"./routers"
@@ -21,5 +23,6 @@ func main() {
 	r.HandleFunc("/login", routers.Login)
 	r.HandleFunc("/logout", routers.LogOut)
 
-	http.ListenAndServe("0.0.0.0:9000", r)
+	// http.ListenAndServe("0.0.0.0:9000", r)
+	http.ListenAndServe("0.0.0.0:9000", handlers.LoggingHandler(os.Stdout, r))
 }

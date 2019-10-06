@@ -61,7 +61,7 @@ func getUser(s *sessions.Session) User {
 
 // Login - авторизация
 func Login(w http.ResponseWriter, r *http.Request) {
-	// ref := r.URL.Query().Get("ref")
+	ref := r.URL.Query().Get("ref")
 	ses, _ := store.Get(r, "user")
 	user := &User{
 		Role:          "admin",
@@ -71,8 +71,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	ses.Values["user"] = user
 	_ = ses.Save(r, w)
-	w.Write([]byte("you are login"))
-	// http.Redirect(w, r, ref, http.StatusFound)
+	// w.Write([]byte("you are login"))
+	http.Redirect(w, r, ref, http.StatusFound)
 }
 
 // LogOut - сброс сессии
@@ -128,6 +128,9 @@ func ValidateToken(h http.Handler) http.Handler {
 				w.Write([]byte(err.Error()))
 				return
 			}
+		} else {
+			w.Write([]byte("Not validate token!"))
+			return
 		}
 		h.ServeHTTP(w, r)
 	})
