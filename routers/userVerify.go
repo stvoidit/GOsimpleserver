@@ -3,7 +3,6 @@ package routers
 import (
 	"encoding/gob"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -135,13 +134,11 @@ func ValidateToken(h http.Handler) http.Handler {
 }
 
 // ValidateCookies - валидация по cookies
-func ValidateCookies(h http.Handler) http.Handler {
+func ValidateCookies(h http.Handler, vr []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		validRoles := []string{"moderator", "admin"}
 		session, _ := store.Get(r, "user")
 		user := getUser(session)
-		fmt.Println(user)
-		err := user.checkRole(validRoles, w, r)
+		err := user.checkRole(vr, w, r)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
@@ -152,9 +149,14 @@ func ValidateCookies(h http.Handler) http.Handler {
 
 // TokenHandler - декоратор для api
 func TokenHandler(h http.Handler, adapters ...func(http.Handler) http.Handler) http.Handler {
-
 	for _, adapter := range adapters {
 		h = adapter(h)
 	}
 	return h
+}
+
+// CookiesHandler - Валидация по кукам
+func CookiesHandler(route func(http.ResponseWriter, *http.Request), validatingFunction func(http.Handler, []string) http.Handler, Filter []string) http.Handler {
+	newRouter := http.HandlerFunc(route)
+	return validatingFunction(newRouter, Filter)
 }
