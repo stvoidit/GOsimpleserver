@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 )
 
 // Jsonify - отправка json response
@@ -45,4 +46,11 @@ func (u User) checkRole(roles []string) error {
 		return errors.New("not validate")
 	}
 	return nil
+}
+
+// SKUD - something data
+type SKUD struct {
+	ID           int
+	VocationUser int
+	Date         time.Time
 }

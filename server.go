@@ -4,22 +4,22 @@ import (
 	"net/http"
 	"os"
 
+	"./routers"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-
-	"./routers"
 )
 
 func main() {
 	r := mux.NewRouter()
-	var cH = routers.CookiesHandler  // cookies Handler decorator
-	var cV = routers.ValidateCookies // cookies Validating func
+	var validateFunc = routers.CookiesHandler // cookies Handler decorator
+	var chekingFunc = routers.ValidateCookies // cookies Validating func
 
 	r.HandleFunc("/test", routers.IndexRoute)
 	r.PathPrefix("/api/").Handler(http.StripPrefix("/api", routers.TokenHandler(r, routers.ValidateToken)))
 
 	r.HandleFunc("/get-token", routers.GetTokenHandler)
-	r.Handle("/", cH(routers.IndexRoute, cV, []string{"moderator", "admin"}))
+	r.Handle("/", validateFunc(routers.IndexRoute, chekingFunc, []string{"moderator", "admin"}))
+	r.HandleFunc("/something", routers.Something)
 	r.HandleFunc("/login", routers.Login)
 	r.HandleFunc("/logout", routers.LogOut)
 
