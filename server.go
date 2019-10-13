@@ -23,6 +23,7 @@ func main() {
 	r.HandleFunc("/login", routers.Login)
 	r.HandleFunc("/logout", routers.LogOut)
 
-	// http.ListenAndServe("0.0.0.0:9000", r)
-	http.ListenAndServe("0.0.0.0:9000", handlers.LoggingHandler(os.Stdout, r))
+	logfile, _ := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	defer logfile.Close()
+	http.ListenAndServe("0.0.0.0:9000", handlers.LoggingHandler(logfile, r))
 }
