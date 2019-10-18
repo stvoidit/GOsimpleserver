@@ -1,4 +1,4 @@
-package routers
+package store
 
 import (
 	"database/sql"
@@ -7,24 +7,24 @@ import (
 
 	// driver
 	_ "github.com/lib/pq"
-
 	"gopkg.in/ini.v1"
 )
 
-var db *sql.DB
+// DB - ...
+var DB = Store{}
 
 func init() {
-	engine := configDB()
-	db = engine.Conn()
+	DB.Connect()
 }
 
-// DB - session object
-type DB struct {
-	ConnStr string
+// Store - ...
+type Store struct {
+	Session *sql.DB
 }
 
-func configDB() DB {
-	cfg, err := ini.Load("config.ini")
+// Connect - ....
+func (s *Store) Connect() {
+	cfg, err := ini.Load("./config.ini")
 	if err != nil {
 		fmt.Printf("Fail to read file: %v", err)
 		os.Exit(1)
@@ -36,12 +36,6 @@ func configDB() DB {
 	password, _ := database.GetKey("password")
 	dbname, _ := database.GetKey("dbname")
 	conn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, login, password, dbname)
-	d := DB{ConnStr: conn}
-	return d
-}
-
-// Conn - connestion
-func (c DB) Conn() *sql.DB {
-	db, _ := sql.Open("postgres", c.ConnStr)
-	return db
+	db, _ := sql.Open("postgres", conn)
+	s.Session = db
 }
