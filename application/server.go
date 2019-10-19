@@ -18,6 +18,7 @@ func (app *NewApp) routers() {
 	public := app.Router
 	public.HandleFunc("/login", routers.Login)
 	public.HandleFunc("/logout", routers.LogOut)
+	public.HandleFunc("/get-token", routers.GetTokenHandler)
 
 	api := app.apiRouter()
 	api.HandleFunc("/departments", routers.Departments)
@@ -38,6 +39,6 @@ func (app *NewApp) cookieRouter() *mux.Router {
 
 func (app *NewApp) apiRouter() *mux.Router {
 	api := app.Router.NewRoute().PathPrefix("/api/").Subrouter()
-	// api.Use(routers.CookiesHandler)
+	api.Use(routers.TokenHandler)
 	return api
 }
