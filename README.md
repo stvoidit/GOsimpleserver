@@ -2,7 +2,7 @@
 
 Запуск:
 
-    go run server.go
+    go run app.go
 
 Пример файла конфигураций для BD
 
