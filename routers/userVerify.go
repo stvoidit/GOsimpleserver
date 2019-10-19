@@ -1,8 +1,19 @@
 package routers
 
 import (
+	"encoding/gob"
+	"fmt"
 	"net/http"
+
+	"github.com/gorilla/sessions"
 )
+
+// Cookie - ...
+var Cookie *sessions.CookieStore
+
+func init() {
+	gob.Register(&user{})
+}
 
 // User - cookies объект
 type user struct {
@@ -15,28 +26,20 @@ type user struct {
 // Login - авторизация
 func Login(w http.ResponseWriter, r *http.Request) {
 	// ref := r.URL.Query().Get("ref")
-	// ses, _ := store.Get(r, "user")
-	// if r.Method == "POST" {
-	// 	var Data struct {
-	// 		Username string `json:"username"`
-	// 		Password string `json:"password"`
-	// 	}
-	// 	_, err := JSONLoad(r, &Data)
-	// 	if err != nil {
-	// 		res := map[string]string{
-	// 			"message": "Wrong login or password!",
-	// 		}
-	// 		Jsonify(w, res, 401)
-	// 		return
-	// 	}
-	// 	user := &User{
-	// 		Role:          "admin",
-	// 		UserID:        2,
-	// 		Department:    1,
-	// 		Authenticated: true,
-	// 	}
-	// 	ses.Values["user"] = user
-	// 	_ = ses.Save(r, w)
+	ses, err := Cookie.Get(r, "authentication-profile")
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: check user in database
+	profile := &user{
+		Role:          "admin",
+		UserID:        2,
+		Department:    1,
+		Authenticated: true,
+	}
+	ses.Values["Profile"] = profile
+	_ = ses.Save(r, w)
 	// 	http.Redirect(w, r, ref, http.StatusFound)
 	// 	return
 	// }
@@ -50,13 +53,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // LogOut - сброс сессии
-// func LogOut(w http.ResponseWriter, r *http.Request) {
-// 	ses, _ := store.Get(r, "user")
-// 	ses.Values["user"] = User{}
-// 	ses.Options.MaxAge = -1
-// 	store.Save(r, w, ses)
-// 	w.Write([]byte("You are logout"))
-// }
+func LogOut(w http.ResponseWriter, r *http.Request) {
+	ses, _ := Cookie.Get(r, "authentication-profile")
+	ses.Values["Profile"] = user{}
+	ses.Options.MaxAge = -1
+	Cookie.Save(r, w, ses)
+	w.Write([]byte("You are logout"))
+}
 
 // GetTokenHandler - получение токена
 // func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +124,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // CookiesHandler - Валидация по кукам
 func CookiesHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ses, err := Cookie.Get(r, "authentication-profile")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(ses.Values["Profile"])
+		profile := ses.Values["Profile"]
+		if profile == nil {
+			w.WriteHeader(401)
+			w.Write([]byte("not auth"))
+			return
+		}
 		// w.Write([]byte("middleware\n"))
 		// user := ses.GetUserData(r)
 		// fmt.Println(user)

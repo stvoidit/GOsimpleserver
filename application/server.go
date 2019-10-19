@@ -2,6 +2,7 @@ package application
 
 import (
 	"../routers"
+	"github.com/gorilla/mux"
 )
 
 // App - ...
@@ -9,17 +10,34 @@ var App NewApp
 
 func init() {
 	App.GetConfig()
-	App.middleware()
+	routers.Cookie = App.Session
 	App.routers()
 }
 
 func (app *NewApp) routers() {
-	app.Router.HandleFunc("/users", routers.Users)
-	app.Router.HandleFunc("/departments", routers.Departments)
-	app.Router.HandleFunc("/usersdeps", routers.UsersDepartments)
-	app.Router.HandleFunc("/login", routers.Login)
+	public := app.Router
+	public.HandleFunc("/login", routers.Login)
+	public.HandleFunc("/logout", routers.LogOut)
+
+	api := app.apiRouter()
+	api.HandleFunc("/departments", routers.Departments)
+	api.HandleFunc("/usersdeps", routers.UsersDepartments)
+	api.HandleFunc("/users", routers.Users)
+
+	private := app.cookieRouter()
+	private.HandleFunc("/departments", routers.Departments)
+	private.HandleFunc("/usersdeps", routers.UsersDepartments)
+	private.HandleFunc("/users", routers.Users)
 }
 
-func (app *NewApp) middleware() {
-	app.Router.Use(routers.CookiesHandler)
+func (app *NewApp) cookieRouter() *mux.Router {
+	private := app.Router.NewRoute().Subrouter()
+	private.Use(routers.CookiesHandler)
+	return private
+}
+
+func (app *NewApp) apiRouter() *mux.Router {
+	api := app.Router.NewRoute().PathPrefix("/api/").Subrouter()
+	// api.Use(routers.CookiesHandler)
+	return api
 }
