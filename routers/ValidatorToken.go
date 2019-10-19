@@ -20,16 +20,22 @@ type TokenClaim struct {
 
 // GetTokenHandler - get api token
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
-	claim := TokenClaim{user{"admin", 1, 1, true}, jwt.StandardClaims{
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(time.Duration(15 * time.Minute)).Unix(),
-	}}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	tokenString, err := token.SignedString([]byte(secretKey))
-	if err != nil {
-		panic(err)
+	if username, _, ok := r.BasicAuth(); ok {
+		// TODO: verification in database
+		claim := TokenClaim{user{username, 1, 1, true}, jwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(time.Duration(15 * time.Minute)).Unix(),
+		}}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
+		tokenString, err := token.SignedString([]byte(secretKey))
+		if err != nil {
+			panic(err)
+		}
+		w.Write([]byte(tokenString))
+		return
 	}
-	w.Write([]byte(tokenString))
+	Jsonify(w, map[string]string{"status": "need Authorization Basic data"}, 401)
+	return
 }
 
 // TokenHandler - api validation middleware
@@ -40,14 +46,14 @@ func TokenHandler(next http.Handler) http.Handler {
 			bearer := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
 			profile, err := checkToken(bearer)
 			if err != nil {
-				w.WriteHeader(403)
+				w.WriteHeader(401)
 				w.Write([]byte(err.Error()))
 				return
 			}
 			ctx := context.WithValue(r.Context(), keyContext, profile)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
-			w.WriteHeader(403)
+			w.WriteHeader(401)
 			w.Write([]byte("Not validate token!"))
 			return
 		}
