@@ -14,7 +14,9 @@ func init() {
 }
 
 func (app *NewApp) routers() {
-	app.Router.HandleFunc("/", routers.IndexRoute)
+	app.Router.HandleFunc("/users", routers.Users)
+	app.Router.HandleFunc("/departments", routers.Departments)
+	app.Router.HandleFunc("/usersdeps", routers.UsersDepartments)
 	app.Router.HandleFunc("/login", routers.Login)
 }
 
