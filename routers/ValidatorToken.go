@@ -1,8 +1,8 @@
 package routers
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -14,21 +14,17 @@ const secretKey = "MySecretKey"
 
 // TokenClaim - token custom type
 type TokenClaim struct {
-	Role          string
-	UserID        int64
-	DeparmentID   int64
-	Authenticated bool
+	user
 	jwt.StandardClaims
 }
 
 // GetTokenHandler - get api token
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
-	claim := TokenClaim{"admin", 1, 1, true, jwt.StandardClaims{
+	claim := TokenClaim{user{"admin", 1, 1, true}, jwt.StandardClaims{
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(time.Duration(15 * time.Minute)).Unix(),
 	}}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	fmt.Println(secretKey)
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		panic(err)
@@ -37,41 +33,37 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // TokenHandler - api validation middleware
-func TokenHandler(h http.Handler) http.Handler {
+func TokenHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bearer := strings.ContainsAny(r.Header.Get("Authorization"), "Bearer")
 		if bearer {
 			bearer := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
-			_, err := checkToken(bearer)
+			profile, err := checkToken(bearer)
 			if err != nil {
 				w.WriteHeader(403)
 				w.Write([]byte(err.Error()))
 				return
 			}
+			ctx := context.WithValue(r.Context(), keyContext, profile)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			w.WriteHeader(403)
 			w.Write([]byte("Not validate token!"))
 			return
 		}
-		h.ServeHTTP(w, r)
 	})
 }
 
 // checkToken - token validation func
-func checkToken(tokenString string) (TokenClaim, error) {
-	u := TokenClaim{}
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func checkToken(tokenString string) (*user, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &TokenClaim{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("bad")
 		}
 		return []byte(secretKey), nil
 	})
-	if err != nil {
-		return u, err
+	if claim, ok := token.Claims.(*TokenClaim); ok && token.Valid {
+		return &claim.user, nil
 	}
-	check := token.Claims.Valid()
-	if check != nil {
-		return u, check
-	}
-	return u, err
+	return &user{}, err
 }

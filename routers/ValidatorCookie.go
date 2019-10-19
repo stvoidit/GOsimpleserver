@@ -1,8 +1,8 @@
 package routers
 
 import (
+	"context"
 	"encoding/gob"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/sessions"
@@ -10,6 +10,7 @@ import (
 
 // Cookie - link on CookieStore, init on server
 var Cookie *sessions.CookieStore
+var keyContext interface{} = "profile"
 
 func init() {
 	gob.Register(&user{})
@@ -68,7 +69,6 @@ func CookiesHandler(next http.Handler) http.Handler {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(ses.Values["Profile"])
 		profile := ses.Values["Profile"]
 		if profile == nil {
 			w.WriteHeader(401)
@@ -84,6 +84,8 @@ func CookiesHandler(next http.Handler) http.Handler {
 		// 	http.Redirect(w, r, "/login"+ref, 302)
 		// 	return
 		// }
-		next.ServeHTTP(w, r)
+
+		ctx := context.WithValue(r.Context(), keyContext, profile)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

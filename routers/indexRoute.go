@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"fmt"
 	"net/http"
 
 	"../store"
@@ -11,6 +12,8 @@ var db = store.DB
 // Users = is '/'
 // Передача параметров в template
 func Users(w http.ResponseWriter, r *http.Request) {
+	profile := r.Context().Value("profile")
+	fmt.Println(profile)
 	args := r.URL.Query()["user"]
 	result := db.AllUsers(args)
 	Jsonify(w, result, 200)
