@@ -68,17 +68,11 @@ func (s *Store) existsTables() {
 	if err != nil {
 		panic(err)
 	}
-	var exists bool
-	s.Session.QueryRow(`select exists (select 1 from information_schema.tables
-		where table_schema = 'public' and table_name in ('users'))`).Scan(&exists)
-	if !exists {
-		s.creatreTables()
-	}
-
+	s.creatreTables()
 }
 
 func (s *Store) creatreTables() {
-	tableUsers := fmt.Sprintf(`CREATE TABLE public.users (
+	tableUsers := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS public.users (
 		id serial NOT NULL,
 		username varchar(50) NOT NULL,
 		email varchar(50) NOT NULL,
@@ -118,7 +112,15 @@ func (s *Store) creatreTables() {
 	END;
 	$function$;
 	
-	create trigger pwd before insert or update on public.users for each row execute procedure insert_user();`, "MySecretKey")
+	do 
+	$$
+	begin
+	if (select count(*) from information_schema.triggers) = 0 then
+	CREATE TRIGGER pwd before insert or update on public.users for each row execute procedure insert_user();
+	end if;
+	end;
+	$$;`,
+		"MySecretKey")
 	_, err := s.Session.Exec(tableUsers)
 	if err != nil {
 		panic(err)
