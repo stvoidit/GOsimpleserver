@@ -2,12 +2,18 @@ package store
 
 // User - ..
 type User struct {
-	ID           int64  `json:"user_id"`
-	FirstName    string `json:"firstnme"`
-	MiddleName   string `json:"lastname"`
-	LastName     string `json:"middlename"`
-	DepartmentID int64  `json:"department"`
-	Position     string `json:"position,omitempty"`
+	ID       int64  `json:"user_id"`
+	Username string `json:"username"`
+	Role     int32  `json:"role"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
+// CheckPassword - ...
+func (u *User) CheckPassword() bool {
+	var valid bool
+	DB.Session.QueryRow(`select exists(select 1 FROM users where "username" = $1 and "password" = hashpassword($2))`, u.Username, u.Password).Scan(&valid)
+	return valid
 }
 
 // Department - ...

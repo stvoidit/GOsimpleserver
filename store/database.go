@@ -77,6 +77,7 @@ func (s *Store) creatreTables() {
 		username varchar(50) NOT NULL,
 		email varchar(50) NOT NULL,
 		"password" varchar(200) NOT NULL,
+		"role" int4 NOT NULL,
 		CONSTRAINT users_un UNIQUE (username, email)
 	);
 

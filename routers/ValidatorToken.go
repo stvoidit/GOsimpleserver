@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"../store"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -20,8 +22,13 @@ type TokenClaim struct {
 
 // GetTokenHandler - get api token
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
-	if username, _, ok := r.BasicAuth(); ok {
-		// TODO: verification in database
+	if username, password, ok := r.BasicAuth(); ok {
+		anon := store.User{Username: username, Password: password}
+		if !anon.CheckPassword() {
+			message := map[string]string{"status": "incorrect passssword or login"}
+			Jsonify(w, message, 401)
+			return
+		}
 		claim := TokenClaim{user{username, 1, 1, true}, jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
 			ExpiresAt: time.Now().Add(time.Duration(15 * time.Minute)).Unix(),
@@ -34,7 +41,7 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(tokenString))
 		return
 	}
-	Jsonify(w, map[string]string{"status": "need Authorization Basic data"}, 401)
+	Jsonify(w, map[string]string{"status": "need authorization Basic data"}, 401)
 	return
 }
 
