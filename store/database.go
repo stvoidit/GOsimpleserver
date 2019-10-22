@@ -126,4 +126,21 @@ func (s *Store) creatreTables() {
 	if err != nil {
 		panic(err)
 	}
+
+	tableVideos := `CREATE TABLE IF NOT EXISTS public.videos (
+		id varchar NOT NULL,
+		url varchar NOT NULL,
+		active bool NOT NULL DEFAULT true,
+		CONSTRAINT videos_un UNIQUE (id));`
+	s.Session.Exec(tableVideos)
+
+	tableStatistic := `CREATE TABLE IF NOT EXISTS public.statistic (
+		id serial NOT NULL,
+		updated timestamptz NOT NULL DEFAULT now(),
+		"views" int4 NOT NULL,
+		likes int4 NULL,
+		dislikes int4 NULL,
+		video varchar NOT NULL,
+		CONSTRAINT statistic_fk FOREIGN KEY (video) REFERENCES videos(id) ON UPDATE CASCADE ON DELETE SET NULL);`
+	s.Session.Exec(tableStatistic)
 }

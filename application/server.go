@@ -19,6 +19,7 @@ func (app *NewApp) routers() {
 	public.HandleFunc("/login", routers.Login)
 	public.HandleFunc("/logout", routers.LogOut)
 	public.HandleFunc("/get-token", routers.GetTokenHandler)
+	public.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
 
 	api := app.apiRouter()
 	api.HandleFunc("/departments", routers.Departments)
