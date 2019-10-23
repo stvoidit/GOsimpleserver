@@ -12,6 +12,18 @@ import (
 	"strings"
 )
 
+type CorrentVideo struct {
+	ID          string
+	Views       int64
+	Likes       int64
+	Dislikes    int64
+	Title       string
+	ChannelID   string
+	ChannelName string
+	Followers   string
+	UploadDate  string
+}
+
 type MetadataRenderer struct {
 	ID    string `json:"videoId"`
 	Title struct {
@@ -32,13 +44,35 @@ type MetadataRenderer struct {
 			DislikeCount int64 `json:"dislikeCount"`
 		} `json:"likeButtonRenderer"`
 	} `json:"likeButton"`
+	DateText struct {
+		SimpleText string `json:"simpleText"`
+	} `json:"dateText"`
+	Owner struct {
+		VOR struct {
+			SubscriberCountText struct {
+				Runs []struct {
+					Followers string `json:"text"`
+				} `json:"runs"`
+			} `json:"subscriberCountText"`
+			ChanelName struct {
+				Runs []struct {
+					Text               string `json:"text"`
+					NavigationEndpoint struct {
+						BrowseEndpoint struct {
+							ChannelID string `json:"browseId"`
+						} `json:"browseEndpoint"`
+					} `json:"navigationEndpoint"`
+				} `json:"runs"`
+			} `json:"title"`
+		} `json:"videoOwnerRenderer"`
+	} `json:"owner"`
 }
 
 type YouTube struct {
-	AutoPlay int64  `json:"autoplay_count"`
-	RVC      string `json:"rvs"`
-	RawWNR   string `json:"watch_next_response"`
-	WNR      struct {
+	// AutoPlay int64 `json:"autoplay_count"`
+	// RVC      string `json:"rvs"`
+	RawWNR string `json:"watch_next_response"`
+	WNR    struct {
 		RContext struct {
 			TCWR struct {
 				Res1 struct {
@@ -57,14 +91,6 @@ type YouTube struct {
 	}
 }
 
-type CorrentVideo struct {
-	ID       string
-	Views    int64
-	Likes    int64
-	Dislikes int64
-	Title    string
-}
-
 func ParseYoutube(html []byte) (*CorrentVideo, error) {
 	pattern := regexp.MustCompile(`'RELATED_PLAYER_ARGS': (.*),\n`)
 	data := pattern.FindSubmatch(html)
@@ -73,8 +99,13 @@ func ParseYoutube(html []byte) (*CorrentVideo, error) {
 	if len(data) > 1 {
 		youtube := new(YouTube)
 		js := replacer.Replace(string(data[1]))
+		// ioutil.WriteFile("___raw.json", []byte(js), 0666)
 		json.Unmarshal([]byte(js), &youtube)
 		json.Unmarshal([]byte(youtube.RawWNR), &youtube.WNR)
+		youtube.RawWNR = ""
+
+		// bjson, _ := json.Marshal(youtube)
+		// ioutil.WriteFile("___parse.json", bjson, 0666)
 
 		clearPatterns := regexp.MustCompile(`[^\d]+`)
 		clearViews := clearPatterns.ReplaceAll([]byte(youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Views.VCR.ViewCount.Count), []byte(""))
@@ -85,13 +116,17 @@ func ParseYoutube(html []byte) (*CorrentVideo, error) {
 		cv.Likes = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Likes.LBR.LikeCount
 		cv.Dislikes = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Likes.LBR.DislikeCount
 		cv.Title = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Title.Runs[0].Text
+		cv.ChannelName = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.ChanelName.Runs[0].Text
+		cv.ChannelID = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.ChanelName.Runs[0].NavigationEndpoint.BrowseEndpoint.ChannelID
+		cv.Followers = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.SubscriberCountText.Runs[0].Followers
+		cv.UploadDate = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.DateText.SimpleText
 		return cv, nil
 	}
 	return cv, errors.New("can't parse")
 }
 
 func main() {
-	url := "..."
+	url := "https://www.youtube.com/watch?v=..."
 	client := &http.Client{}
 	r, err := client.Get(url)
 	if err != nil {
@@ -105,6 +140,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(youtube)
-
+	fmt.Printf("%+v", youtube)
 }
