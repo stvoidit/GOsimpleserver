@@ -1,29 +1,16 @@
-package main
+package services
 
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"../store"
 )
 
-type CorrentVideo struct {
-	ID          string
-	Views       int64
-	Likes       int64
-	Dislikes    int64
-	Title       string
-	ChannelID   string
-	ChannelName string
-	Followers   string
-	UploadDate  string
-}
-
+// MetadataRenderer - ...
 type MetadataRenderer struct {
 	ID    string `json:"videoId"`
 	Title struct {
@@ -68,6 +55,7 @@ type MetadataRenderer struct {
 	} `json:"owner"`
 }
 
+// YouTube - ...
 type YouTube struct {
 	// AutoPlay int64 `json:"autoplay_count"`
 	// RVC      string `json:"rvs"`
@@ -91,11 +79,12 @@ type YouTube struct {
 	}
 }
 
-func ParseYoutube(html []byte) (*CorrentVideo, error) {
+// ParseYoutube - ...
+func ParseYoutube(html []byte) (store.Statistic, error) {
 	pattern := regexp.MustCompile(`'RELATED_PLAYER_ARGS': (.*),\n`)
 	data := pattern.FindSubmatch(html)
 	replacer := strings.NewReplacer(`//`, ``, `""`, `"`)
-	cv := new(CorrentVideo)
+	cv := new(store.Statistic)
 	if len(data) > 1 {
 		youtube := new(YouTube)
 		js := replacer.Replace(string(data[1]))
@@ -107,8 +96,8 @@ func ParseYoutube(html []byte) (*CorrentVideo, error) {
 		// bjson, _ := json.Marshal(youtube)
 		// ioutil.WriteFile("___parse.json", bjson, 0666)
 
-		clearPatterns := regexp.MustCompile(`[^\d]+`)
-		clearViews := clearPatterns.ReplaceAll([]byte(youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Views.VCR.ViewCount.Count), []byte(""))
+		clearPatternVideo := regexp.MustCompile(`[^\d]+`)
+		clearViews := clearPatternVideo.ReplaceAll([]byte(youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Views.VCR.ViewCount.Count), []byte(""))
 		views, _ := strconv.ParseInt(string(clearViews), 10, 64)
 
 		cv.ID = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.ID
@@ -120,25 +109,25 @@ func ParseYoutube(html []byte) (*CorrentVideo, error) {
 		cv.ChannelID = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.ChanelName.Runs[0].NavigationEndpoint.BrowseEndpoint.ChannelID
 		cv.Followers = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.SubscriberCountText.Runs[0].Followers
 		cv.UploadDate = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.DateText.SimpleText
-		return cv, nil
+		return *cv, nil
 	}
-	return cv, errors.New("can't parse")
+	return *cv, errors.New("can't parse")
 }
 
-func main() {
-	url := "https://www.youtube.com/watch?v=..."
-	client := &http.Client{}
-	r, err := client.Get(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	youtube, err := ParseYoutube(b)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%+v", youtube)
-}
+// func main() {
+// 	url := "https://www.youtube.com/watch?v=nH2qi4FoJ7M"
+// 	client := &http.Client{}
+// 	r, err := client.Get(url)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	b, err := ioutil.ReadAll(r.Body)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	youtube, err := ParseYoutube(b)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	fmt.Printf("%+v", youtube)
+// }

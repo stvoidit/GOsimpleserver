@@ -32,3 +32,39 @@ func (v *Video) InsertVideo() {
 		panic(err)
 	}
 }
+
+// GetAllUrls - ...
+func GetAllUrls() []Video {
+	rows, _ := DB.Session.Query(`SELECT * FROM VIDEOS`)
+	var videos []Video
+	for rows.Next() {
+		var v Video
+		rows.Scan(&v.ID, &v.URL, &v.Active)
+		videos = append(videos, v)
+	}
+	return videos
+}
+
+// Statistic - ...
+type Statistic struct {
+	ID          string
+	Views       int64
+	Likes       int64
+	Dislikes    int64
+	Title       string
+	ChannelID   string
+	ChannelName string
+	Followers   string
+	UploadDate  string
+	Video       string
+}
+
+// Insert - ...
+func (s *Statistic) Insert() {
+	_, err := DB.Session.Exec(`INSERT INTO public.statistic
+	("views", likes, dislikes, title, channel, channelname, followers, uploaddate, video)
+	VALUES($1::int, $2::int, $3::int, $4, $5, $6, $7, $8, $9);`, s.Views, s.Likes, s.Dislikes, s.Title, s.ChannelID, s.ChannelName, s.Followers, s.UploadDate, s.Video)
+	if err != nil {
+		panic(err)
+	}
+}
