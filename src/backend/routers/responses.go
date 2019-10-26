@@ -38,7 +38,10 @@ var tmp = make(TemplatesMap)
 
 // RegistrateTemplates - ...
 func RegistrateTemplates(tmpPath string) {
-	files, _ := ioutil.ReadDir(tmpPath)
+	files, err := ioutil.ReadDir(tmpPath)
+	if err != nil {
+		panic(err)
+	}
 	for _, file := range files {
 		fullpath := path.Join(tmpPath, file.Name())
 		filename := strings.TrimSuffix(file.Name(), ".html")
