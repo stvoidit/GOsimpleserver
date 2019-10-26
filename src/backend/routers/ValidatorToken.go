@@ -16,7 +16,7 @@ const secretKey = "MySecretKey"
 
 // TokenClaim - token custom type
 type TokenClaim struct {
-	user
+	store.User
 	jwt.StandardClaims
 }
 
@@ -29,7 +29,7 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 			Jsonify(w, message, 401)
 			return
 		}
-		claim := TokenClaim{user{username, 1, 1, true}, jwt.StandardClaims{
+		claim := TokenClaim{anon, jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
 			ExpiresAt: time.Now().Add(time.Duration(15 * time.Minute)).Unix(),
 		}}
@@ -68,7 +68,7 @@ func TokenHandler(next http.Handler) http.Handler {
 }
 
 // checkToken - token validation func
-func checkToken(tokenString string) (*user, error) {
+func checkToken(tokenString string) (*store.User, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &TokenClaim{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("bad")
@@ -76,10 +76,10 @@ func checkToken(tokenString string) (*user, error) {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		return &user{}, err
+		return &store.User{}, err
 	}
 	if claim, ok := token.Claims.(*TokenClaim); ok && token.Valid {
-		return &claim.user, nil
+		return &claim.User, nil
 	}
-	return &user{}, err
+	return &store.User{}, err
 }

@@ -16,7 +16,13 @@ type User struct {
 // CheckPassword - ...
 func (u *User) CheckPassword() bool {
 	var valid bool
-	DB.Session.QueryRow(`select exists(select 1 FROM users where "username" = $1 and "password" = hashpassword($2))`, u.Username, u.Password).Scan(&valid)
+	DB.Session.QueryRow(`select exists(select 1 FROM users WHERE "username" = $1 and "password" = hashpassword($2))`, u.Username, u.Password).Scan(&valid)
+	if valid {
+		DB.Session.QueryRow(`select id, "role", email
+		FROM users
+		WHERE "username" = $1 and "password" = hashpassword($2)`,
+			u.Username, u.Password).Scan(&u.ID, &u.Role, &u.Email)
+	}
 	return valid
 }
 

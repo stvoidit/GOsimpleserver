@@ -19,29 +19,12 @@ func init() {
 	DB.connect()
 }
 
-// Store - ...
-type Store struct {
-	Session *sql.DB
-}
-
 type config struct {
 	host     string
 	port     string
 	login    string
 	password string
 	dbname   string
-}
-
-// Connect - ....
-func (s *Store) connect() {
-	conn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		cnf.host, cnf.port, cnf.login, cnf.password, cnf.dbname)
-	db, err := sql.Open("postgres", conn)
-	if err != nil {
-		panic(err)
-	}
-	s.Session = db
-	s.existsTables()
 }
 
 func (c *config) readConfig() {
@@ -61,6 +44,23 @@ func (c *config) readConfig() {
 	c.login = login.String()
 	c.password = password.String()
 	c.dbname = dbname.String()
+}
+
+// Store - ...
+type Store struct {
+	Session *sql.DB
+}
+
+// Connect - ....
+func (s *Store) connect() {
+	conn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		cnf.host, cnf.port, cnf.login, cnf.password, cnf.dbname)
+	db, err := sql.Open("postgres", conn)
+	if err != nil {
+		panic(err)
+	}
+	s.Session = db
+	s.existsTables()
 }
 
 func (s *Store) existsTables() {

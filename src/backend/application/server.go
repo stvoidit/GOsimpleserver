@@ -1,6 +1,9 @@
 package application
 
 import (
+	"net/http"
+	"path"
+
 	"../routers"
 	"github.com/gorilla/mux"
 )
@@ -8,9 +11,15 @@ import (
 // App - ...
 var App NewApp
 
+// StaticPath - ...
+var StaticPath = "FOLDER"
+
 func init() {
 	App.GetConfig()
 	routers.Cookie = App.Session
+	routers.RegistrateTemplates(path.Join(StaticPath, "templates"))
+	App.Router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir(path.Join(StaticPath, "js")))))
+	App.Router.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir(path.Join(StaticPath, "css")))))
 	App.routers()
 }
 
@@ -45,3 +54,8 @@ func (app *NewApp) apiRouter() *mux.Router {
 	api.Use(routers.TokenHandler)
 	return api
 }
+
+// func (r *mux.Router) setStaticRouters() {
+// 	api := app.Router.NewRoute().PathPrefix("/api/").Subrouter()
+// 	api.Use(routers.TokenHandler)
+// }

@@ -2,7 +2,10 @@ package routers
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"path"
+	"strings"
 )
 
 // Jsonify - отправка json response
@@ -26,4 +29,28 @@ func JSONLoad(req *http.Request, i interface{}) (interface{}, error) {
 		return nil, err
 	}
 	return i, nil
+}
+
+// TemplatesMap - ...
+type TemplatesMap map[string][]byte
+
+var tmp = make(TemplatesMap)
+
+// RegistrateTemplates - ...
+func RegistrateTemplates(tmpPath string) {
+	files, _ := ioutil.ReadDir(tmpPath)
+	for _, file := range files {
+		fullpath := path.Join(tmpPath, file.Name())
+		filename := strings.TrimSuffix(file.Name(), ".html")
+		bfile, err := ioutil.ReadFile(fullpath)
+		if err != nil {
+			panic(err)
+		}
+		tmp[filename] = bfile
+	}
+}
+
+// RenderTemplate - ...
+func RenderTemplate(w http.ResponseWriter, name string) {
+	w.Write(tmp[name])
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"net/http"
 
+	"../store"
 	"github.com/gorilla/sessions"
 )
 
@@ -13,50 +14,38 @@ var Cookie *sessions.CookieStore
 var keyContext interface{} = "profile"
 
 func init() {
-	gob.Register(&user{})
-}
-
-// User - cookies custom type
-type user struct {
-	Role          string
-	UserID        int
-	Department    int
-	Authenticated bool
+	gob.Register(&store.User{})
 }
 
 // Login - authentication
 func Login(w http.ResponseWriter, r *http.Request) {
 	// ref := r.URL.Query().Get("ref")
-	ses, err := Cookie.Get(r, "authentication-profile")
-	if err != nil {
-		panic(err)
+	ses, _ := Cookie.Get(r, "authentication-profile")
+	if r.Method == "POST" {
+		var au store.User
+		JSONLoad(r, &au)
+		verify := au.CheckPassword()
+		if !verify {
+			m := map[string]string{"status": "incorrect login or password"}
+			Jsonify(w, m, 200)
+			return
+		}
+		ses.Values["Profile"] = au
+		_ = ses.Save(r, w)
+		m := map[string]string{"status": "ok"}
+		Jsonify(w, m, 200)
+		return
 	}
-
-	// TODO: check user in database
-	profile := &user{
-		Role:          "admin",
-		UserID:        2,
-		Department:    1,
-		Authenticated: true,
+	if r.Method == "GET" {
+		RenderTemplate(w, "login")
+		return
 	}
-	ses.Values["Profile"] = profile
-	_ = ses.Save(r, w)
-	// 	http.Redirect(w, r, ref, http.StatusFound)
-	// 	return
-	// }
-	// if r.Method == "GET" {
-	// 	res := map[string]string{
-	// 		"message": "Its login screen!",
-	// 	}
-	// 	Jsonify(w, res, 200)
-	// }
-	w.Write([]byte("login"))
 }
 
 // LogOut - reset session cookie
 func LogOut(w http.ResponseWriter, r *http.Request) {
 	ses, _ := Cookie.Get(r, "authentication-profile")
-	ses.Values["Profile"] = user{}
+	ses.Values["Profile"] = store.User{}
 	ses.Options.MaxAge = -1
 	Cookie.Save(r, w, ses)
 	w.Write([]byte("You are logout"))
