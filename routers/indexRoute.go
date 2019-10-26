@@ -2,7 +2,10 @@ package routers
 
 import (
 	"net/http"
+	"sync"
+	"time"
 
+	"../services"
 	"../store"
 )
 
@@ -29,12 +32,15 @@ func UsersDepartments(w http.ResponseWriter, r *http.Request) {
 
 // AddVideo - ...
 func AddVideo(w http.ResponseWriter, r *http.Request) {
-	var NewVideos []store.Video
-	JSONLoad(r, &NewVideos)
-	for _, video := range NewVideos {
-		if video.ID != "" {
-			video.Active = true
-			video.InsertVideo()
-		}
+	var NewVideos []struct {
+		URL string `json:"url"`
 	}
+	JSONLoad(r, &NewVideos)
+	tr := &http.Transport{DisableKeepAlives: false}
+	client := &http.Client{Timeout: 600 * time.Second, Transport: tr}
+	waiting := sync.WaitGroup{}
+	for _, link := range NewVideos {
+		go services.AddNew(link.URL, client, &waiting)
+	}
+	waiting.Wait()
 }

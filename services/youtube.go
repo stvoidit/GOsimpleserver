@@ -3,9 +3,13 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"../store"
 )
@@ -101,6 +105,7 @@ func ParseYoutube(html []byte) (store.Statistic, error) {
 		views, _ := strconv.ParseInt(string(clearViews), 10, 64)
 
 		cv.ID = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.ID
+		cv.Video = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.ID
 		cv.Views = views
 		cv.Likes = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Likes.LBR.LikeCount
 		cv.Dislikes = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Likes.LBR.DislikeCount
@@ -112,6 +117,24 @@ func ParseYoutube(html []byte) (store.Statistic, error) {
 		return *cv, nil
 	}
 	return *cv, errors.New("can't parse")
+}
+
+// AddNew - ...
+func AddNew(url string, client *http.Client, wg *sync.WaitGroup) {
+	wg.Add(1)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("user-agent", "Chrome/78.0.3904.70")
+	response, _ := client.Do(req)
+	b, _ := ioutil.ReadAll(response.Body)
+	s, err := ParseYoutube(b)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	result := s.InsertVideo(url)
+	if result {
+		s.Insert()
+	}
+	wg.Done()
 }
 
 // func main() {

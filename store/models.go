@@ -1,5 +1,9 @@
 package store
 
+import (
+	"log"
+)
+
 // User - ..
 type User struct {
 	ID       int64  `json:"id"`
@@ -18,9 +22,11 @@ func (u *User) CheckPassword() bool {
 
 // Video - ...
 type Video struct {
-	ID     string `json:"id"`
-	URL    string `json:"url"`
-	Active bool   `json:"active"`
+	ID        string `json:"id"`
+	URL       string `json:"url"`
+	Active    bool   `json:"active"`
+	ChannelID string `json:"channel"`
+	Uploaded  string `json:"uploaded"`
 }
 
 // InsertVideo - ...
@@ -39,7 +45,7 @@ func GetAllUrls() []Video {
 	var videos []Video
 	for rows.Next() {
 		var v Video
-		rows.Scan(&v.ID, &v.URL, &v.Active)
+		rows.Scan(&v.ID, &v.URL, &v.Active, &v.Uploaded, &v.ChannelID)
 		videos = append(videos, v)
 	}
 	return videos
@@ -65,6 +71,22 @@ func (s *Statistic) Insert() {
 	("views", likes, dislikes, title, channel, channelname, followers, uploaddate, video)
 	VALUES($1::int, $2::int, $3::int, $4, $5, $6, $7, $8, $9);`, s.Views, s.Likes, s.Dislikes, s.Title, s.ChannelID, s.ChannelName, s.Followers, s.UploadDate, s.Video)
 	if err != nil {
-		panic(err)
+		log.Printf(err.Error())
 	}
+}
+
+// InsertVideo - ...
+func (s *Statistic) InsertVideo(url string) bool {
+	result, err := DB.Session.Exec(`INSERT INTO public.videos
+	(id, url, uploaddate, channel)
+	select $1::varchar, $2, $3, $4
+	where not exists(select 1 from videos where id = $1::varchar);`, s.ID, url, s.UploadDate, s.ChannelID)
+	if err != nil {
+		log.Printf(err.Error())
+	}
+	if ok, _ := result.RowsAffected(); ok == 0 {
+		return false
+	}
+	return true
+
 }
