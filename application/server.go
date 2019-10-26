@@ -25,11 +25,13 @@ func (app *NewApp) routers() {
 	api.HandleFunc("/departments", routers.Departments)
 	api.HandleFunc("/usersdeps", routers.UsersDepartments)
 	api.HandleFunc("/users", routers.Users)
+	api.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
 
 	private := app.cookieRouter()
 	private.HandleFunc("/departments", routers.Departments)
 	private.HandleFunc("/usersdeps", routers.UsersDepartments)
 	private.HandleFunc("/users", routers.Users)
+	private.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
 }
 
 func (app *NewApp) cookieRouter() *mux.Router {

@@ -48,10 +48,10 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 // TokenHandler - api validation middleware
 func TokenHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bearer := strings.ContainsAny(r.Header.Get("Authorization"), "Bearer")
+		bearer := strings.Contains(r.Header.Get("Authorization"), "Bearer")
 		if bearer {
-			bearer := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
-			profile, err := checkToken(bearer)
+			token := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
+			profile, err := checkToken(token)
 			if err != nil {
 				w.WriteHeader(401)
 				w.Write([]byte(err.Error()))
@@ -61,7 +61,7 @@ func TokenHandler(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			w.WriteHeader(401)
-			w.Write([]byte("Not validate token!"))
+			w.Write([]byte("Need Bearer token in Authorization headers"))
 			return
 		}
 	})
@@ -75,6 +75,9 @@ func checkToken(tokenString string) (*user, error) {
 		}
 		return []byte(secretKey), nil
 	})
+	if err != nil {
+		return &user{}, err
+	}
 	if claim, ok := token.Claims.(*TokenClaim); ok && token.Valid {
 		return &claim.user, nil
 	}

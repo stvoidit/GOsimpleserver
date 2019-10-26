@@ -43,4 +43,6 @@ func AddVideo(w http.ResponseWriter, r *http.Request) {
 		go services.AddNew(link.URL, client, &waiting)
 	}
 	waiting.Wait()
+	response := map[string]string{"status": "add videos"}
+	Jsonify(w, response, 201)
 }

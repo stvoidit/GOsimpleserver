@@ -147,7 +147,7 @@ func (s *Store) creatreTables() {
 		channel varchar NOT NULL,
 		channelname varchar NOT NULL,
 		followers varchar NOT NULL,
-		video varchar NOT NULL,
+		video varchar NULL,
 		CONSTRAINT statistic_fk FOREIGN KEY (video) REFERENCES videos(id) ON UPDATE CASCADE ON DELETE SET NULL);
 		CREATE INDEX IF NOT EXISTS statistic_channel_idx ON public.statistic USING btree (channel);`
 	s.Session.Exec(tableStatistic)
