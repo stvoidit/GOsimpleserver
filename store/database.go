@@ -131,8 +131,9 @@ func (s *Store) creatreTables() {
 		id varchar NOT NULL,
 		url varchar NOT NULL,
 		active bool NOT NULL DEFAULT true,
-		uploaddate varchar NULL,
+		uploaddate varchar NOT NULL,
 		channel varchar NULL,
+		title varchar NOT NULL,
 		CONSTRAINT videos_un UNIQUE (id));
 		CREATE UNIQUE INDEX IF NOT EXISTS videos_un ON public.videos USING btree (id);`
 	s.Session.Exec(tableVideos)
@@ -141,14 +142,12 @@ func (s *Store) creatreTables() {
 		id serial NOT NULL,
 		updated timestamptz NOT NULL DEFAULT now(),
 		"views" int4 NOT NULL,
-		likes int4 NULL,
+		likes int4 NOT NULL,
 		dislikes int4 NULL,
-		title varchar NOT NULL,
-		channel varchar NULL,
-		channelname varchar NULL,
-		followers varchar NULL,
-		uploaddate varchar NULL,
-		video varchar NULL,
+		channel varchar NOT NULL,
+		channelname varchar NOT NULL,
+		followers varchar NOT NULL,
+		video varchar NOT NULL,
 		CONSTRAINT statistic_fk FOREIGN KEY (video) REFERENCES videos(id) ON UPDATE CASCADE ON DELETE SET NULL);
 		CREATE INDEX IF NOT EXISTS statistic_channel_idx ON public.statistic USING btree (channel);`
 	s.Session.Exec(tableStatistic)

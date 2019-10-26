@@ -109,10 +109,18 @@ func ParseYoutube(html []byte) (store.Statistic, error) {
 		cv.Views = views
 		cv.Likes = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Likes.LBR.LikeCount
 		cv.Dislikes = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Likes.LBR.DislikeCount
-		cv.Title = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Title.Runs[0].Text
+		if len(youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Title.Runs) == 0 {
+			cv.Title = "NaN"
+		} else {
+			cv.Title = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Title.Runs[0].Text
+		}
 		cv.ChannelName = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.ChanelName.Runs[0].Text
 		cv.ChannelID = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.ChanelName.Runs[0].NavigationEndpoint.BrowseEndpoint.ChannelID
-		cv.Followers = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.SubscriberCountText.Runs[0].Followers
+		if len(youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.SubscriberCountText.Runs) == 0 {
+			cv.Followers = "NaN"
+		} else {
+			cv.Followers = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.Owner.VOR.SubscriberCountText.Runs[0].Followers
+		}
 		cv.UploadDate = youtube.WNR.RContext.TCWR.Res1.Res2.Contents[0].SectionRenderer.Contents[0].MetadataRenderer.DateText.SimpleText
 		return *cv, nil
 	}
@@ -130,10 +138,11 @@ func AddNew(url string, client *http.Client, wg *sync.WaitGroup) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	result := s.InsertVideo(url)
-	if result {
-		s.Insert()
-	}
+	s.InsertVideo(url)
+	s.Insert()
+	// if result {
+	// 	s.Insert()
+	// }
 	wg.Done()
 }
 

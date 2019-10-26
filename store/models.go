@@ -68,8 +68,8 @@ type Statistic struct {
 // Insert - ...
 func (s *Statistic) Insert() {
 	_, err := DB.Session.Exec(`INSERT INTO public.statistic
-	("views", likes, dislikes, title, channel, channelname, followers, uploaddate, video)
-	VALUES($1::int, $2::int, $3::int, $4, $5, $6, $7, $8, $9);`, s.Views, s.Likes, s.Dislikes, s.Title, s.ChannelID, s.ChannelName, s.Followers, s.UploadDate, s.Video)
+	("views", likes, dislikes, channel, channelname, followers, video)
+	VALUES($1::int, $2::int, $3::int, $4, $5, $6, $7);`, s.Views, s.Likes, s.Dislikes, s.ChannelID, s.ChannelName, s.Followers, s.Video)
 	if err != nil {
 		log.Printf(err.Error())
 	}
@@ -78,9 +78,9 @@ func (s *Statistic) Insert() {
 // InsertVideo - ...
 func (s *Statistic) InsertVideo(url string) bool {
 	result, err := DB.Session.Exec(`INSERT INTO public.videos
-	(id, url, uploaddate, channel)
-	select $1::varchar, $2, $3, $4
-	where not exists(select 1 from videos where id = $1::varchar);`, s.ID, url, s.UploadDate, s.ChannelID)
+	(id, url, uploaddate, channel, title)
+	select $1::varchar, $2, $3, $4, $5
+	where not exists(select 1 from videos where id = $1::varchar);`, s.ID, url, s.UploadDate, s.ChannelID, s.Title)
 	if err != nil {
 		log.Printf(err.Error())
 	}
