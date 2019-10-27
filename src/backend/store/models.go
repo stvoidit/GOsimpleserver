@@ -2,7 +2,12 @@ package store
 
 import (
 	"log"
+	"time"
+
+	"github.com/lib/pq"
 )
+
+const datetimetz = "2006-01-02 15:04:05.99-07"
 
 // User - ..
 type User struct {
@@ -33,6 +38,7 @@ type Video struct {
 	Active    bool   `json:"active"`
 	ChannelID string `json:"channel"`
 	Uploaded  string `json:"uploaded"`
+	Created   time.Time
 }
 
 // InsertVideo - ...
@@ -47,11 +53,11 @@ func (v *Video) InsertVideo() {
 
 // GetAllUrls - ...
 func GetAllUrls() []Video {
-	rows, _ := DB.Session.Query(`SELECT * FROM VIDEOS`)
+	rows, _ := DB.Session.Query(`SELECT id, url, uploaddate, channel, title, created FROM VIDEOS`)
 	var videos []Video
 	for rows.Next() {
 		var v Video
-		rows.Scan(&v.ID, &v.URL, &v.Active, &v.Uploaded, &v.ChannelID)
+		rows.Scan(&v.ID, &v.URL, &v.Active, &v.Uploaded, &v.ChannelID, &v.Created)
 		videos = append(videos, v)
 	}
 	return videos
@@ -95,4 +101,41 @@ func (s *Statistic) InsertVideo(url string) bool {
 	}
 	return true
 
+}
+
+// StatisticSlice - ...
+type StatisticSlice struct {
+	ID        string `sql:"id"`
+	URL       string `sql:"url"`
+	Title     string `sql:"title"`
+	DateSlice []time.Time
+	Views     []int64
+	Created   time.Time
+}
+
+// GetStat - ...
+func GetStat() []StatisticSlice {
+	var stat []StatisticSlice
+	rows, err := DB.Session.Query(`select
+		v.id, v.created, v.url, v.title, array_agg(s.updated), array_agg("views")
+		from videos as v
+		join statistic as s on s.video = v.id
+		--where v.id = 'nH2qi4FoJ7M'
+		group by 1,2,3,4
+		`)
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		var rss StatisticSlice
+		var dtslice []string
+		rows.Scan(&rss.ID, &rss.Created, &rss.URL, &rss.Title, pq.Array(&dtslice), pq.Array(&rss.Views))
+		for _, v := range dtslice {
+			t, _ := time.Parse(datetimetz, v)
+			rss.DateSlice = append(rss.DateSlice, t.UTC())
+		}
+		stat = append(stat, rss)
+	}
+	return stat
 }

@@ -32,7 +32,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 		ses.Values["Profile"] = au
 		_ = ses.Save(r, w)
-		m := map[string]string{"status": "ok"}
+		m := map[string]string{"status": "ok", "goto": "/MyVieos"}
 		Jsonify(w, m, 200)
 		return
 	}

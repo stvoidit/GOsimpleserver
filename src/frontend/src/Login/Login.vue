@@ -52,6 +52,7 @@ export default {
             this.validate = true;
           } else {
             this.validate = false;
+            window.location.href = res.data.goto
           }
         })
         .catch(() => {

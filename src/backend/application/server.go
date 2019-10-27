@@ -26,18 +26,13 @@ func (app *NewApp) routers() {
 	public.HandleFunc("/login", routers.Login)
 	public.HandleFunc("/logout", routers.LogOut)
 	public.HandleFunc("/get-token", routers.GetTokenHandler)
-	public.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
+	public.HandleFunc("/UserVideos", routers.UserVideos).Methods("GET")
+	public.HandleFunc("/MyVieos", routers.MyVieos).Methods("GET")
 
 	api := app.apiRouter()
-	api.HandleFunc("/departments", routers.Departments)
-	api.HandleFunc("/usersdeps", routers.UsersDepartments)
-	api.HandleFunc("/users", routers.Users)
 	api.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
 
 	private := app.cookieRouter()
-	private.HandleFunc("/departments", routers.Departments)
-	private.HandleFunc("/usersdeps", routers.UsersDepartments)
-	private.HandleFunc("/users", routers.Users)
 	private.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
 }
 

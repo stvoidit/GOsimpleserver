@@ -7,9 +7,15 @@ module.exports = {
   pages: {
     login: {
       entry: 'src/Login/main.js',
-      filename: '../../build/static/templates/login.html',
+      // filename: '../../build/static/templates/login.html',
       title: 'login',
       chunks: ['chunk-vendors', 'chunk-common', 'login']
+    },
+    MyVieos: {
+      entry: 'src/MyVieos/main.js',
+      // filename: '../../build/static/templates/MyVieos.html',
+      title: 'MyVieos',
+      chunks: ['chunk-vendors', 'chunk-common', 'MyVieos']
     }
 
   }
