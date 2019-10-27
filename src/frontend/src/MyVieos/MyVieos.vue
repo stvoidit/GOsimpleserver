@@ -10,7 +10,7 @@ import axios from "axios";
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import am4themes_material from "@amcharts/amcharts4/themes/animated";
-am4core.useTheme(am4themes_material); //am4themes_animated
+am4core.useTheme(am4themes_material);
 am4core.options.onlyShowOnViewport = true;
 export default {
   name: "myvideos",
@@ -58,7 +58,6 @@ export default {
       chart.cursor = new am4charts.XYCursor();
     });
   },
-  mounted() {},
   computed: {
     RebuildData() {
       let newData = [];
@@ -67,22 +66,19 @@ export default {
         statObject.title = element.Title;
         statObject.data = [];
         element.Views.forEach((v, i) => {
-          let vname = `value${index}`;
-          let o = {};
-          o[vname] = v;
-          statObject.data.push(o);
+          let obj = {};
+          obj[`value${index}`] = v;
+          statObject.data.push(obj);
         });
         element.DateSlice.forEach((v, i) => {
-          let vdate = `date${index}`;
-          statObject.data[i][vdate] = new Date(Date.parse(v));
+          statObject.data[i][`date${index}`] = new Date(Date.parse(v));
         });
         newData.push(statObject);
         return;
       });
       return newData;
     }
-  },
-  methods: {}
+  }
 };
 </script>
 
