@@ -8,20 +8,23 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const staticPath = "static"
+
 // App - ...
 var App NewApp
 
 func init() {
 	App.GetConfig()
 	routers.Cookie = App.Session
-	const StaticPath = "static"
-	routers.RegistrateTemplates(path.Join(StaticPath, "templates"))
-	App.Router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir(path.Join(StaticPath, "js")))))
-	App.Router.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir(path.Join(StaticPath, "css")))))
+	App.Router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
+	App.Router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir(path.Join(staticPath, "js")))))
+	App.Router.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir(path.Join(staticPath, "css")))))
 	App.routers()
 }
 
 func (app *NewApp) routers() {
+	routers.RegistrateTemplates(path.Join(staticPath, "templates"))
+
 	public := app.Router
 	public.HandleFunc("/login", routers.Login)
 	public.HandleFunc("/logout", routers.LogOut)

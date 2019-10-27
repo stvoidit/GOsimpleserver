@@ -14,6 +14,23 @@ am4core.useTheme(am4themes_material);
 am4core.options.onlyShowOnViewport = true;
 export default {
   name: "myvideos",
+  metaInfo: {
+    title: "Контроль Обращений",
+    link: [
+      {
+        rel: "shortcut icon",
+        href: "/static/favicon.ico"
+      },
+      {
+        rel: "shortcut icon",
+        href: "/static/favicon-16x16.png"
+      },
+      {
+        rel: "shortcut icon",
+        href: "/static/favicon-32x32.png"
+      }
+    ]
+  },
   data() {
     return {
       RawData: []
