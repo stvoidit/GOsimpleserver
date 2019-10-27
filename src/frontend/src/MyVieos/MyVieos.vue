@@ -11,6 +11,7 @@ import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import am4themes_material from "@amcharts/amcharts4/themes/animated";
 am4core.useTheme(am4themes_material); //am4themes_animated
+am4core.options.onlyShowOnViewport = true;
 export default {
   name: "myvideos",
   data() {
@@ -26,6 +27,13 @@ export default {
       chart.width = am4core.percent(100);
 
       var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+      dateAxis.baseInterval = {
+        timeUnit: "hour",
+        count: 1
+      };
+      dateAxis.skipEmptyPeriods = true;
+      // dateAxis.renderer.minGridDistance = 100000;
+      dateAxis.renderer.labels.template.location = 0.5;
       dateAxis.renderer.grid.template.location = 0;
       var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
       valueAxis.tooltip.disabled = false;
@@ -43,7 +51,7 @@ export default {
         series.name = data.title;
         series.dataFields.dateX = `date${index}`;
         series.dataFields.valueY = `value${index}`;
-        series.tooltipText = "{valueY.value}";
+        series.tooltipText = "{name}: {valueY.value}";
         scrollbarX.series.push(series);
       });
       chart.legend = new am4charts.Legend();
@@ -81,6 +89,6 @@ export default {
 <style>
 #chartdiv {
   margin: 0 50px;
-  height: 700px;
+  height: 65vh;
 }
 </style>
