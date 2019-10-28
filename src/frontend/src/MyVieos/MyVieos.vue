@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <div>hello</div>
     <div id="chartdiv"></div>
   </div>
 </template>
