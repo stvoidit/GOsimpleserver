@@ -53,7 +53,10 @@ func (v *Video) InsertVideo() {
 
 // GetAllUrls - ...
 func GetAllUrls() []Video {
-	rows, _ := DB.Session.Query(`SELECT id, url, uploaddate, channel, title, created FROM VIDEOS`)
+	rows, err := DB.Session.Query(`SELECT id, url, uploaddate, channel, title, created FROM VIDEOS`)
+	if err != nil {
+		log.Printf(err.Error())
+	}
 	var videos []Video
 	for rows.Next() {
 		var v Video
