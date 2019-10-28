@@ -1,7 +1,5 @@
 <template>
-  <div id="app">
-    <div id="chartdiv"></div>
-  </div>
+  <div id="app"></div>
 </template>
 
 <script>
@@ -9,9 +7,8 @@ import axios from "axios";
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import ru_RU from "@amcharts/amcharts4/lang/ru_RU";
-import am4themes_material from "@amcharts/amcharts4/themes/animated";
-am4core.useTheme(am4themes_material);
-am4core.options.onlyShowOnViewport = true;
+import material from "@amcharts/amcharts4/themes/material";
+am4core.useTheme(material);
 export default {
   name: "myvideos",
   metaInfo: {
@@ -31,72 +28,52 @@ export default {
       }
     ]
   },
-  data() {
-    return {
-      RawData: []
-    };
-  },
   created() {
+    // fetch data and create charts in methods
     axios.get("/UserVideos").then(res => {
-      this.RawData = res.data;
-      var chart = am4core.create("chartdiv", am4charts.XYChart);
-      chart.language.locale = ru_RU;
-      chart.height = am4core.percent(100);
-      chart.width = am4core.percent(100);
-
-      var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
-      dateAxis.groupData = true;
-
-      dateAxis.groupIntervals.setAll([
-        { timeUnit: "minute", count: 1 },
-        { timeUnit: "minute", count: 20 },
-        { timeUnit: "hour", count: 1 },
-        { timeUnit: "hour", count: 24 },
-        { timeUnit: "day", count: 1 },
-        { timeUnit: "month", count: 1 },
-        { timeUnit: "year", count: 1 }
-      ]);
-      dateAxis.groupCount = 1;
-      dateAxis.skipEmptyPeriods = true;
-
-      var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
-      valueAxis.tooltip.disabled = false;
-
-      chart.data = [];
-      this.RebuildData.forEach((data, index) => {
-        var series = chart.series.push(new am4charts.LineSeries());
-        chart.data.push(...data.data);
-        series.name = data.title;
-        series.strokeWidth = 3;
-        series.tooltipText = "{valueY.value}";
-        series.dataFields.dateX = `date${index}`;
-        series.dataFields.valueY = `value${index}`;
-        // chart.scrollbarX.series.push(series);
+      let appdiv = document.getElementById("app");
+      res.data.forEach((data, index) => {
+        let chartname = `chart${index}`;
+        let div = document.createElement("div");
+        div.innerText = "123";
+        div.setAttribute("id", chartname);
+        div.classList.add("chart");
+        appdiv.appendChild(div);
+        this.CrateChart(chartname, data);
       });
-
-      chart.legend = new am4charts.Legend();
-      chart.cursor = new am4charts.XYCursor();
-      chart.cursor.xAxis = dateAxis;
-      chart.scrollbarX = new am4charts.XYChartScrollbar();
     });
   },
-  computed: {
-    RebuildData() {
+  methods: {
+    CrateChart(elem, dataset) {
+      // created charts for each vedio
+      var chart = am4core.create(elem, am4charts.XYChart);
+      chart.language.locale = ru_RU;
+      chart.data = this.RebuildData(dataset.DateSlice, dataset.Views);
+      var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+      dateAxis.groupData = true;
+      dateAxis.groupCount = 1;
+      dateAxis.skipEmptyPeriods = true;
+      var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+      valueAxis.tooltip.disabled = false;
+      var series = chart.series.push(new am4charts.LineSeries());
+      series.name = dataset.Title;
+      series.tooltipText = "{valueY.value}";
+      series.dataFields.dateX = `date`;
+      series.dataFields.valueY = `value`;
+      series.strokeWidth = 5;
+
+      chart.cursor = new am4charts.XYCursor();
+      chart.cursor.xAxis = dateAxis;
+      chart.legend = new am4charts.Legend();
+    },
+    RebuildData(dates, values) {
+      // rebuild data for amchart
       let newData = [];
-      this.RawData.forEach((element, index) => {
-        let statObject = {};
-        statObject.title = element.Title;
-        statObject.data = [];
-        element.Views.forEach((v, i) => {
-          let obj = {};
-          obj[`value${index}`] = v;
-          statObject.data.push(obj);
+      dates.forEach((date, i) => {
+        newData.push({
+          date: new Date(Date.parse(date)),
+          value: values[i]
         });
-        element.DateSlice.forEach((v, i) => {
-          statObject.data[i][`date${index}`] = new Date(Date.parse(v));
-        });
-        newData.push(statObject);
-        return;
       });
       return newData;
     }
@@ -105,8 +82,11 @@ export default {
 </script>
 
 <style>
-#chartdiv {
+#app {
+  margin-top: 50px;
+}
+.chart {
   margin: 0 50px;
-  height: 65vh;
+  height: 33vh;
 }
 </style>
