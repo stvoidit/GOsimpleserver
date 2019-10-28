@@ -12,7 +12,7 @@ am4core.useTheme(material);
 export default {
   name: "myvideos",
   metaInfo: {
-    title: "Контроль Обращений",
+    title: "Videos charts",
     link: [
       {
         rel: "shortcut icon",
