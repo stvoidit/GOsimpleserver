@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"../store"
+	"../../store"
 )
 
 // MetadataRenderer - ...

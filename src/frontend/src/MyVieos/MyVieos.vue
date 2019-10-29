@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <Menu />
+    <AddNew />
     <div id="charts" class="uk-container"></div>
   </div>
 </template>
@@ -14,9 +15,10 @@ import material from "@amcharts/amcharts4/themes/material";
 am4core.useTheme(material);
 
 import Menu from "@/Components/Navbar.vue";
+import AddNew from "@/Components/AddNew.vue";
 export default {
   name: "myvideos",
-  components: { Menu },
+  components: { Menu, AddNew },
   metaInfo: {
     title: "Videos charts",
     link: [
@@ -85,7 +87,12 @@ export default {
       // created charts for each vedio
       var chart = am4core.create(elem, am4charts.XYChart);
       chart.language.locale = ru_RU;
-      chart.data = this.RebuildData(dataset.DateSlice, dataset.Views, dataset.Likes, dataset.Dislikes);
+      chart.data = this.RebuildData(
+        dataset.DateSlice,
+        dataset.Views,
+        dataset.Likes,
+        dataset.Dislikes
+      );
       var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
       dateAxis.groupData = true;
       dateAxis.groupCount = 1;
@@ -136,7 +143,6 @@ export default {
           value: values[i],
           likes: valueLikes[i],
           dislikes: valueDislikes[i]
-          
         });
       });
       return newData;

@@ -2,7 +2,6 @@
   <nav class="uk-navbar-container" uk-navbar>
     <div class="uk-navbar-left">
       <ul class="uk-navbar-nav">
-        <!-- class="uk-active" -->
         <li v-for="link in URLS" :key="link.url">
           <a :href="link.url">{{link.name}}</a>
         </li>
@@ -13,7 +12,7 @@
 
 <script>
 export default {
-  name: "menu",
+  name: "Menu",
   data() {
     return {
       URLS: [

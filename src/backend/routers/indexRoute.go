@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"../services"
+	services "../services/youtube"
 	"../store"
 )
 

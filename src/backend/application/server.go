@@ -36,6 +36,7 @@ func (app *NewApp) routers() {
 	private := app.cookieRouter()
 	private.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
 	private.HandleFunc("/UserVideos", routers.UserVideos).Methods("GET")
+	private.HandleFunc("/", routers.MyVieos).Methods("GET")
 	private.HandleFunc("/MyVieos", routers.MyVieos).Methods("GET")
 }
 
