@@ -113,6 +113,8 @@ type StatisticSlice struct {
 	Title     string `sql:"title"`
 	DateSlice []time.Time
 	Views     []int64
+	Likes     []int64
+	Dislikes  []int64
 	Created   time.Time
 }
 
@@ -120,7 +122,7 @@ type StatisticSlice struct {
 func GetStat() []StatisticSlice {
 	var stat []StatisticSlice
 	rows, err := DB.Session.Query(`select
-		v.id, v.created, v.url, v.title, array_agg(s.updated), array_agg("views")
+		v.id, v.created, v.url, v.title, array_agg(s.updated), array_agg("views"), array_agg(likes), array_agg(dislikes)
 		from videos as v
 		join statistic as s on s.video = v.id
 		--where v.id = 'nH2qi4FoJ7M'
@@ -133,7 +135,7 @@ func GetStat() []StatisticSlice {
 	for rows.Next() {
 		var rss StatisticSlice
 		var dtslice []string
-		rows.Scan(&rss.ID, &rss.Created, &rss.URL, &rss.Title, pq.Array(&dtslice), pq.Array(&rss.Views))
+		rows.Scan(&rss.ID, &rss.Created, &rss.URL, &rss.Title, pq.Array(&dtslice), pq.Array(&rss.Views), pq.Array(&rss.Likes), pq.Array(&rss.Dislikes))
 		for _, v := range dtslice {
 			t, _ := time.Parse(datetimetz, v)
 			rss.DateSlice = append(rss.DateSlice, t.UTC())

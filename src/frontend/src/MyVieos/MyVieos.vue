@@ -85,7 +85,7 @@ export default {
       // created charts for each vedio
       var chart = am4core.create(elem, am4charts.XYChart);
       chart.language.locale = ru_RU;
-      chart.data = this.RebuildData(dataset.DateSlice, dataset.Views);
+      chart.data = this.RebuildData(dataset.DateSlice, dataset.Views, dataset.Likes, dataset.Dislikes);
       var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
       dateAxis.groupData = true;
       dateAxis.groupCount = 1;
@@ -93,12 +93,27 @@ export default {
       var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
       valueAxis.tooltip.disabled = false;
       var series = chart.series.push(new am4charts.LineSeries());
-      series.name = dataset.Title;
+      series.name = "Views";
       series.tooltipText = "{valueY.value}";
       series.dataFields.dateX = `date`;
       series.dataFields.valueY = `value`;
       series.strokeWidth = 5;
 
+      var likes = chart.series.push(new am4charts.LineSeries());
+      likes.name = "Likes";
+      likes.tooltipText = "{valueY.value}";
+      likes.dataFields.dateX = `date`;
+      likes.dataFields.valueY = `likes`;
+      likes.strokeWidth = 1;
+
+      var dislikes = chart.series.push(new am4charts.LineSeries());
+      dislikes.name = "Dislikes";
+      dislikes.tooltipText = "{valueY.value}";
+      dislikes.dataFields.dateX = `date`;
+      dislikes.dataFields.valueY = `dislikes`;
+      dislikes.strokeWidth = 1;
+
+      chart.legend = new am4charts.Legend();
       chart.cursor = new am4charts.XYCursor();
       chart.cursor.xAxis = dateAxis;
       chart.exporting.menu = new am4core.ExportMenu();
@@ -112,13 +127,16 @@ export default {
         }
       ];
     },
-    RebuildData(dates, values) {
+    RebuildData(dates, values, valueLikes, valueDislikes) {
       // rebuild data for amchart
       let newData = [];
       dates.forEach((date, i) => {
         newData.push({
           date: new Date(Date.parse(date)),
-          value: values[i]
+          value: values[i],
+          likes: valueLikes[i],
+          dislikes: valueDislikes[i]
+          
         });
       });
       return newData;
