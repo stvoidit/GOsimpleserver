@@ -15,6 +15,6 @@ func main() {
 		panic(err)
 	}
 	defer logfile.Close()
-	// http.ListenAndServe("0.0.0.0:9000", handlers.LoggingHandler(logfile, app.Router))
-	http.ListenAndServe("127.0.0.1:9000", handlers.LoggingHandler(os.Stdout, app.Router))
+	http.ListenAndServe("0.0.0.0:9000", handlers.LoggingHandler(logfile, app.Router))
+	// http.ListenAndServe("0.0.0.0:9000", handlers.LoggingHandler(os.Stdout, app.Router))
 }
