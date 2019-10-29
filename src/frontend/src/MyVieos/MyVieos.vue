@@ -1,5 +1,8 @@
 <template>
-  <div id="app"></div>
+  <div id="app">
+    <Menu />
+    <div id="charts" class="uk-container"></div>
+  </div>
 </template>
 
 <script>
@@ -9,8 +12,11 @@ import * as am4charts from "@amcharts/amcharts4/charts";
 import ru_RU from "@amcharts/amcharts4/lang/ru_RU";
 import material from "@amcharts/amcharts4/themes/material";
 am4core.useTheme(material);
+
+import Menu from "@/Components/Navbar.vue";
 export default {
   name: "myvideos",
+  components: { Menu },
   metaInfo: {
     title: "Videos charts",
     link: [
@@ -28,22 +34,53 @@ export default {
       }
     ]
   },
+  data() {
+    return {
+      data: []
+    };
+  },
   created() {
     // fetch data and create charts in methods
     axios.get("/UserVideos").then(res => {
-      let appdiv = document.getElementById("app");
+      this.data = res.data;
+      // let appdiv = document.getElementById("charts");
       res.data.forEach((data, index) => {
         let chartname = `chart${index}`;
-        let div = document.createElement("div");
-        div.innerText = "123";
-        div.setAttribute("id", chartname);
-        div.classList.add("chart");
-        appdiv.appendChild(div);
+        this.CreateElems(data, chartname);
         this.CrateChart(chartname, data);
       });
     });
   },
   methods: {
+    CreateElems(dataset, chartname) {
+      let app = document.getElementById("charts");
+      let container = document.createElement("div");
+      container.classList.add("uk-flex-wrap-around");
+      container.classList.add("uk-flex");
+
+      let textdiv = document.createElement("div");
+      textdiv.classList.add("uk-width-1-3");
+      textdiv.classList.add("uk-card");
+      textdiv.classList.add("uk-card-body");
+      let titleDiv = document.createElement("div");
+      textdiv.appendChild(titleDiv);
+      let videoHref = document.createElement("a");
+      videoHref.setAttribute("href", dataset.URL);
+      videoHref.setAttribute("target", "_blank");
+      videoHref.innerHTML = dataset.Title;
+      titleDiv.appendChild(videoHref);
+
+      let chartdiv = document.createElement("div");
+      chartdiv.classList.add("uk-width-1-1");
+      chartdiv.classList.add("uk-card");
+      chartdiv.classList.add("uk-card-body");
+      chartdiv.classList.add("chart");
+      chartdiv.setAttribute("id", chartname);
+
+      app.appendChild(container);
+      container.appendChild(textdiv);
+      container.appendChild(chartdiv);
+    },
     CrateChart(elem, dataset) {
       // created charts for each vedio
       var chart = am4core.create(elem, am4charts.XYChart);
@@ -64,7 +101,16 @@ export default {
 
       chart.cursor = new am4charts.XYCursor();
       chart.cursor.xAxis = dateAxis;
-      chart.legend = new am4charts.Legend();
+      chart.exporting.menu = new am4core.ExportMenu();
+      chart.exporting.menu.items = [
+        {
+          label: "...",
+          menu: [
+            // { type: "png", label: "PNG" },
+            { type: "xlsx", label: "XLSX" }
+          ]
+        }
+      ];
     },
     RebuildData(dates, values) {
       // rebuild data for amchart
@@ -82,11 +128,8 @@ export default {
 </script>
 
 <style>
-#app {
-  margin-top: 50px;
-}
 .chart {
-  margin: 0 50px;
-  height: 33vh;
+  /* margin: 0 50px; */
+  height: 30vh;
 }
 </style>

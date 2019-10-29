@@ -29,14 +29,14 @@ func (app *NewApp) routers() {
 	public.HandleFunc("/login", routers.Login)
 	public.HandleFunc("/logout", routers.LogOut)
 	public.HandleFunc("/get-token", routers.GetTokenHandler)
-	public.HandleFunc("/UserVideos", routers.UserVideos).Methods("GET")
-	public.HandleFunc("/MyVieos", routers.MyVieos).Methods("GET")
 
 	api := app.apiRouter()
 	api.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
 
 	private := app.cookieRouter()
 	private.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
+	private.HandleFunc("/UserVideos", routers.UserVideos).Methods("GET")
+	private.HandleFunc("/MyVieos", routers.MyVieos).Methods("GET")
 }
 
 func (app *NewApp) cookieRouter() *mux.Router {

@@ -1,32 +1,28 @@
 <template>
-  <div id="app">
-    <div class="md-layout md-gutter md-alignment-center-center">
-      <form class="md-layout-item-100" @submit.prevent="SendLogin()">
-        <md-card class>
-          <!-- <md-card-header>
-            <div class="md-title">Users</div>
-          </md-card-header>-->
-          <md-card-content>
-            <div class="md-layout md-gutter">
-              <div class="md-layout-item md-small-size-100">
-                <md-field :class="validate ? 'md-invalid' :''">
-                  <label for="username">Login</label>
-                  <md-input v-model="username" name="username" id="username" />
-                  <!-- <span class="md-error" v-if="validate">incorrect login</span> -->
-                </md-field>
-                <md-field :class="validate ? 'md-invalid' :''">
-                  <label for="password">Password</label>
-                  <md-input v-model="password" name="password" id="password" type="password" />
-                  <!-- <span class="md-error" v-if="validate">incorrect password</span> -->
-                </md-field>
-              </div>
-            </div>
-          </md-card-content>
-
-          <md-card-actions>
-            <md-button type="submit" class="md-primary">Create user</md-button>
-          </md-card-actions>
-        </md-card>
+  <div id="app" class="uk-container">
+    <div class="uk-flex uk-flex-center">
+      <form class="uk-flex uk-flex-column" @submit.prevent="SendLogin()">
+        <div class="uk-margin">
+          <label class="uk-form-label" for="username">Username</label>
+          <div class="uk-form-controls">
+            <input class="uk-input" type="text" name="username" id="username" v-model="username" />
+          </div>
+        </div>
+        <div class="uk-inline">
+          <label class="uk-form-label" for="password">Password</label>
+          <div class="uk-form-controls">
+            <input
+              class="uk-input"
+              type="password"
+              name="password"
+              id="password"
+              v-model="password"
+            />
+          </div>
+        </div>
+        <div class="uk-margin uk-flex uk-flex-center">
+          <button class="uk-button uk-button-primary uk-button-small" type="submit">login</button>
+        </div>
       </form>
     </div>
   </div>
@@ -36,6 +32,23 @@
 import axios from "axios";
 export default {
   name: "login",
+  metaInfo: {
+    title: "Login",
+    link: [
+      {
+        rel: "shortcut icon",
+        href: "/static/favicon.ico"
+      },
+      {
+        rel: "shortcut icon",
+        href: "/static/favicon-16x16.png"
+      },
+      {
+        rel: "shortcut icon",
+        href: "/static/favicon-32x32.png"
+      }
+    ]
+  },
   data() {
     return {
       username: "",
@@ -52,7 +65,7 @@ export default {
             this.validate = true;
           } else {
             this.validate = false;
-            window.location.href = res.data.goto
+            window.location.href = res.data.goto;
           }
         })
         .catch(() => {

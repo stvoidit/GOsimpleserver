@@ -17,6 +17,5 @@ module.exports = {
       title: 'MyVieos',
       chunks: ['chunk-vendors', 'chunk-common', 'MyVieos']
     }
-
   }
 }
