@@ -3,6 +3,7 @@ package routers
 import (
 	"context"
 	"encoding/gob"
+	"fmt"
 	"net/http"
 
 	"../store"
@@ -19,7 +20,10 @@ func init() {
 
 // Login - authentication
 func Login(w http.ResponseWriter, r *http.Request) {
-	// ref := r.URL.Query().Get("ref")
+	ref := r.URL.Query().Get("ref")
+	if ref == "" {
+		ref = "/"
+	}
 	ses, _ := Cookie.Get(r, "authentication-profile")
 	if r.Method == "POST" {
 		var au store.User
@@ -32,7 +36,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 		ses.Values["Profile"] = au
 		_ = ses.Save(r, w)
-		m := map[string]string{"status": "ok", "goto": "/MyVieos"}
+		m := map[string]string{"status": "ok", "goto": ref}
 		Jsonify(w, m, 200)
 		return
 	}
@@ -60,20 +64,10 @@ func CookiesHandler(next http.Handler) http.Handler {
 		}
 		profile := ses.Values["Profile"]
 		if profile == nil {
-			w.WriteHeader(401)
-			w.Write([]byte("not auth"))
+			ref := fmt.Sprintf("?ref=%s", r.URL.Path)
+			http.Redirect(w, r, "/login"+ref, 302)
 			return
 		}
-		// w.Write([]byte("middleware\n"))
-		// user := ses.GetUserData(r)
-		// fmt.Println(user)
-		// err := user.checkRole(filterRoles)
-		// if err != nil {
-		// 	ref := fmt.Sprintf("?ref=%s", r.URL.Path)
-		// 	http.Redirect(w, r, "/login"+ref, 302)
-		// 	return
-		// }
-
 		ctx := context.WithValue(r.Context(), keyContext, profile)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
