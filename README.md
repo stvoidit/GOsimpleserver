@@ -14,3 +14,6 @@ __config.ini__
     user = USER
     password = PASSWORD
     dbname = DBNAME
+    
+    [application]
+    secret = MySecretKey
