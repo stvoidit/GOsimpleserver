@@ -28,7 +28,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	ses, err := Cookie.Get(r, "authentication-profile")
 	if err != nil {
-		log.Println(err)
+		log.Println("login:", err)
 	}
 	if r.Method == "POST" {
 		var au store.User
@@ -65,7 +65,7 @@ func CookiesHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ses, err := Cookie.Get(r, "authentication-profile")
 		if err != nil {
-			log.Println(err)
+			log.Println("middleware", err)
 		}
 		profile := ses.Values["Profile"]
 		if profile == nil {
