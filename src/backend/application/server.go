@@ -41,6 +41,7 @@ func (app *App) routers() {
 	private.HandleFunc("/UserVideos", routers.UserVideos).Methods("GET")
 	private.HandleFunc("/", routers.MyVieos).Methods("GET")
 	private.HandleFunc("/MyVieos", routers.MyVieos).Methods("GET")
+	private.HandleFunc("/UserChannels", routers.UserChannels).Methods("GET")
 }
 
 func (app *App) cookieRouter() *mux.Router {

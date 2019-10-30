@@ -82,13 +82,14 @@ func (s *Store) existsTables() {
 }
 
 func (s *Store) creatreTables() {
-	tableUsers := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS public.users (
-		id serial NOT NULL,
-		username varchar(50) NOT NULL,
-		email varchar(50) NOT NULL,
-		"password" varchar(200) NOT NULL,
-		"role" int4 NOT NULL,
-		CONSTRAINT users_un UNIQUE (username, email)
+	tableUsers := fmt.Sprintf(`
+	CREATE TABLE IF NOT EXISTS public.users (
+	id serial NOT NULL,
+	username varchar(50) NOT NULL,
+	email varchar(50) NOT NULL,
+	"password" varchar(200) NOT NULL,
+	"role" int4 NOT NULL,
+	CONSTRAINT users_un UNIQUE (username, email)
 	);
 
 	CREATE OR REPLACE FUNCTION public.hashpassword(userpassword character varying)
@@ -126,39 +127,47 @@ func (s *Store) creatreTables() {
 	do 
 	$$
 	begin
-	if (select count(*) from information_schema.triggers) = 0 then
-	CREATE TRIGGER pwd before insert or update on public.users for each row execute procedure insert_user();
-	end if;
+		if (select count(*) from information_schema.triggers) = 0 then
+			CREATE TRIGGER pwd before insert or update on public.users for each row execute procedure insert_user();
+		end if;
 	end;
 	$$;`,
-		"MySecretKey")
+		string(Config.Secret))
 	_, err := s.Exec(tableUsers)
 	if err != nil {
 		panic(err)
 	}
 
-	tableVideos := `CREATE TABLE IF NOT EXISTS public.videos (
-		id varchar NOT NULL,
-		url varchar NOT NULL,
-		active bool NOT NULL DEFAULT true,
-		uploaddate varchar NOT NULL,
-		channel varchar NULL,
-		title varchar NOT NULL,
-		CONSTRAINT videos_un UNIQUE (id));
-		CREATE UNIQUE INDEX IF NOT EXISTS videos_un ON public.videos USING btree (id);`
+	tableVideos := `
+	CREATE TABLE IF NOT EXISTS public.videos (
+	id varchar NOT NULL,
+	url varchar NOT NULL,
+	active bool NOT NULL DEFAULT true,
+	uploaddate varchar NOT NULL,
+	channel varchar NULL,
+	title varchar NOT NULL,
+	created timestamptz NULL DEFAULT now(),
+	CONSTRAINT videos_un UNIQUE (id)
+	CREATE UNIQUE INDEX IF NOT EXISTS videos_un ON public.videos USING btree (id);
+	
+	CREATE OR REPLACE VIEW public.all_channels
+	AS SELECT DISTINCT statistic.channelname,
+	statistic.channel
+	FROM statistic
+	ORDER BY statistic.channelname;`
 	s.Exec(tableVideos)
 
 	tableStatistic := `CREATE TABLE IF NOT EXISTS public.statistic (
-		id serial NOT NULL,
-		updated timestamptz NOT NULL DEFAULT now(),
-		"views" int4 NOT NULL,
-		likes int4 NOT NULL,
-		dislikes int4 NULL,
-		channel varchar NOT NULL,
-		channelname varchar NOT NULL,
-		followers varchar NOT NULL,
-		video varchar NULL,
-		CONSTRAINT statistic_fk FOREIGN KEY (video) REFERENCES videos(id) ON UPDATE CASCADE ON DELETE SET NULL);
-		CREATE INDEX IF NOT EXISTS statistic_channel_idx ON public.statistic USING btree (channel);`
+	id serial NOT NULL,
+	updated timestamptz NOT NULL DEFAULT now(),
+	"views" int4 NOT NULL,
+	likes int4 NOT NULL,
+	dislikes int4 NULL,
+	channel varchar NOT NULL,
+	channelname varchar NOT NULL,
+	followers varchar NOT NULL,
+	video varchar NULL,
+	CONSTRAINT statistic_fk FOREIGN KEY (video) REFERENCES videos(id) ON UPDATE CASCADE ON DELETE SET NULL);
+	CREATE INDEX IF NOT EXISTS statistic_channel_idx ON public.statistic USING btree (channel);`
 	s.Exec(tableStatistic)
 }

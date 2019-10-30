@@ -119,15 +119,15 @@ type StatisticSlice struct {
 }
 
 // GetStat - ...
-func GetStat() []StatisticSlice {
+func GetStat(chanID string) []StatisticSlice {
 	var stat []StatisticSlice
 	rows, err := DB.Query(`select
 		v.id, v.created, v.url, v.title, array_agg(s.updated), array_agg("views"), array_agg(likes), array_agg(dislikes)
 		from videos as v
 		join statistic as s on s.video = v.id
-		--where v.id = 'nH2qi4FoJ7M'
+		where v.channel = $1
 		group by 1,2,3,4
-		`)
+		`, chanID)
 	if err != nil {
 		panic(err)
 	}
@@ -143,4 +143,25 @@ func GetStat() []StatisticSlice {
 		stat = append(stat, rss)
 	}
 	return stat
+}
+
+// Channel - ...
+type Channel struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+}
+
+// GetAllChanels - ...
+func GetAllChanels() []Channel {
+	var channels []Channel
+	rows, err := DB.Query(`select * from all_channels`)
+	if err != nil {
+		panic(err)
+	}
+	for rows.Next() {
+		var ch Channel
+		rows.Scan(&ch.Name, &ch.ID)
+		channels = append(channels, ch)
+	}
+	return channels
 }

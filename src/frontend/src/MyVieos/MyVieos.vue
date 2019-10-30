@@ -2,7 +2,12 @@
   <div id="app">
     <Menu />
     <AddNew />
-    <div id="charts" class="uk-container"></div>
+    <ChoiseChannel :options="channels" @choise="ChoiseChannel" />
+    <div id="charts" class="uk-container">
+      <div v-if="data" class="uk-text-center">
+        <h4>Choise channel</h4>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -16,9 +21,10 @@ am4core.useTheme(material);
 
 import Menu from "@/Components/Navbar.vue";
 import AddNew from "@/Components/AddNew.vue";
+import ChoiseChannel from "@/Components/ChoiseChannel.vue";
 export default {
   name: "myvideos",
-  components: { Menu, AddNew },
+  components: { Menu, AddNew, ChoiseChannel },
   metaInfo: {
     title: "Videos charts",
     link: [
@@ -38,50 +44,62 @@ export default {
   },
   data() {
     return {
-      data: []
+      data: [],
+      channels: [],
+      charts: []
     };
   },
   created() {
-    // fetch data and create charts in methods
-    axios.get("/UserVideos").then(res => {
-      this.data = res.data;
-      // let appdiv = document.getElementById("charts");
-      res.data.forEach((data, index) => {
-        let chartname = `chart${index}`;
-        this.CreateElems(data, chartname);
-        this.CrateChart(chartname, data);
-      });
-    });
+    axios.get("/UserChannels").then(res => (this.channels = res.data));
+    this.FetchData();
   },
   methods: {
-    CreateElems(dataset, chartname) {
-      let app = document.getElementById("charts");
-      let container = document.createElement("div");
-      container.classList.add("uk-flex-wrap-around");
-      container.classList.add("uk-flex");
+    ChoiseChannel(chan) {
+      this.charts.forEach(e => e.remove());
+      this.charts = [];
+      let payload = { chanId: chan };
+      this.FetchData(payload);
+    },
+    FetchData(payload) {
+      // fetch data and create charts in methods
+      axios.get("/UserVideos", { params: payload }).then(res => {
+        this.data = res.data ? res.data : [];
+        this.CreateElems();
+      });
+    },
+    CreateElems() {
+      this.data.forEach((dataset, index) => {
+        let chartname = `chart${index}`;
+        let app = document.getElementById("charts");
+        let container = document.createElement("div");
+        container.classList.add("uk-flex-wrap-around");
+        container.classList.add("uk-flex");
+        this.charts.push(container);
 
-      let textdiv = document.createElement("div");
-      textdiv.classList.add("uk-width-1-3");
-      textdiv.classList.add("uk-card");
-      textdiv.classList.add("uk-card-body");
-      let titleDiv = document.createElement("div");
-      textdiv.appendChild(titleDiv);
-      let videoHref = document.createElement("a");
-      videoHref.setAttribute("href", dataset.URL);
-      videoHref.setAttribute("target", "_blank");
-      videoHref.innerHTML = dataset.Title;
-      titleDiv.appendChild(videoHref);
+        let textdiv = document.createElement("div");
+        textdiv.classList.add("uk-width-1-3");
+        textdiv.classList.add("uk-card");
+        textdiv.classList.add("uk-card-body");
+        let titleDiv = document.createElement("div");
+        textdiv.appendChild(titleDiv);
+        let videoHref = document.createElement("a");
+        videoHref.setAttribute("href", dataset.URL);
+        videoHref.setAttribute("target", "_blank");
+        videoHref.innerHTML = dataset.Title;
+        titleDiv.appendChild(videoHref);
 
-      let chartdiv = document.createElement("div");
-      chartdiv.classList.add("uk-width-1-1");
-      chartdiv.classList.add("uk-card");
-      chartdiv.classList.add("uk-card-body");
-      chartdiv.classList.add("chart");
-      chartdiv.setAttribute("id", chartname);
+        let chartdiv = document.createElement("div");
+        chartdiv.classList.add("uk-width-1-1");
+        chartdiv.classList.add("uk-card");
+        chartdiv.classList.add("uk-card-body");
+        chartdiv.classList.add("chart");
+        chartdiv.setAttribute("id", chartname);
 
-      app.appendChild(container);
-      container.appendChild(textdiv);
-      container.appendChild(chartdiv);
+        app.appendChild(container);
+        container.appendChild(textdiv);
+        container.appendChild(chartdiv);
+        this.CrateChart(chartname, dataset);
+      });
     },
     CrateChart(elem, dataset) {
       // created charts for each vedio
@@ -153,7 +171,6 @@ export default {
 
 <style>
 .chart {
-  /* margin: 0 50px; */
   height: 30vh;
 }
 </style>

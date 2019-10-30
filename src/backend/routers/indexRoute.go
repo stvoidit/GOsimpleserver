@@ -11,7 +11,14 @@ import (
 
 // UserVideos - ...
 func UserVideos(w http.ResponseWriter, r *http.Request) {
-	result := store.GetStat()
+	q := r.URL.Query()
+	result := store.GetStat(q.Get("chanId"))
+	Jsonify(w, result, 200)
+}
+
+// UserChannels - ..
+func UserChannels(w http.ResponseWriter, r *http.Request) {
+	result := store.GetAllChanels()
 	Jsonify(w, result, 200)
 }
 
