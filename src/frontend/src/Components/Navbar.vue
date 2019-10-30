@@ -7,6 +7,14 @@
         </li>
       </ul>
     </div>
+
+    <div class="uk-navbar-right">
+      <ul class="uk-navbar-nav">
+        <li>
+          <a href="/logout">Logout</a>
+        </li>
+      </ul>
+    </div>
   </nav>
 </template>
 

@@ -57,7 +57,7 @@ func LogOut(w http.ResponseWriter, r *http.Request) {
 	ses.Values["Profile"] = store.User{}
 	ses.Options.MaxAge = -1
 	Cookie.Save(r, w, ses)
-	w.Write([]byte("You are logout"))
+	http.Redirect(w, r, "/login", 302)
 }
 
 // CookiesHandler - cookie validation handler
