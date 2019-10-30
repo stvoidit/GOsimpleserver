@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"log"
 	"net/http"
 
 	"../store"
@@ -16,6 +17,7 @@ var keyContext interface{} = "profile"
 
 func init() {
 	gob.Register(&store.User{})
+	Cookie = sessions.NewCookieStore(store.Config.Secret)
 }
 
 // Login - authentication
@@ -24,7 +26,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if ref == "" {
 		ref = "/"
 	}
-	ses, _ := Cookie.Get(r, "authentication-profile")
+	ses, err := Cookie.Get(r, "authentication-profile")
+	if err != nil {
+		log.Println(err)
+	}
 	if r.Method == "POST" {
 		var au store.User
 		JSONLoad(r, &au)
@@ -60,7 +65,7 @@ func CookiesHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ses, err := Cookie.Get(r, "authentication-profile")
 		if err != nil {
-			panic(err)
+			log.Println(err)
 		}
 		profile := ses.Values["Profile"]
 		if profile == nil {

@@ -11,18 +11,21 @@ import (
 const staticPath = "static"
 
 // App - ...
-var App NewApp
+type App struct {
+	*mux.Router
+}
 
-func init() {
-	App.GetConfig()
-	routers.Cookie = App.Session
+// Start - ...
+func Start() *App {
+	App := App{mux.NewRouter()}
 	App.Router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
 	App.Router.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir(path.Join(staticPath, "js")))))
 	App.Router.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir(path.Join(staticPath, "css")))))
 	App.routers()
+	return &App
 }
 
-func (app *NewApp) routers() {
+func (app *App) routers() {
 	routers.RegistrateTemplates(path.Join(staticPath, "templates"))
 
 	public := app.Router
@@ -40,13 +43,13 @@ func (app *NewApp) routers() {
 	private.HandleFunc("/MyVieos", routers.MyVieos).Methods("GET")
 }
 
-func (app *NewApp) cookieRouter() *mux.Router {
+func (app *App) cookieRouter() *mux.Router {
 	private := app.Router.NewRoute().Subrouter()
 	private.Use(routers.CookiesHandler)
 	return private
 }
 
-func (app *NewApp) apiRouter() *mux.Router {
+func (app *App) apiRouter() *mux.Router {
 	api := app.Router.NewRoute().PathPrefix("/api/").Subrouter()
 	api.Use(routers.TokenHandler)
 	return api

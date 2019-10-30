@@ -21,9 +21,9 @@ type User struct {
 // CheckPassword - ...
 func (u *User) CheckPassword() bool {
 	var valid bool
-	DB.Session.QueryRow(`select exists(select 1 FROM users WHERE "username" = $1 and "password" = hashpassword($2))`, u.Username, u.Password).Scan(&valid)
+	DB.QueryRow(`select exists(select 1 FROM users WHERE "username" = $1 and "password" = hashpassword($2))`, u.Username, u.Password).Scan(&valid)
 	if valid {
-		DB.Session.QueryRow(`select id, "role", email
+		DB.QueryRow(`select id, "role", email
 		FROM users
 		WHERE "username" = $1 and "password" = hashpassword($2)`,
 			u.Username, u.Password).Scan(&u.ID, &u.Role, &u.Email)
@@ -43,7 +43,7 @@ type Video struct {
 
 // InsertVideo - ...
 func (v *Video) InsertVideo() {
-	_, err := DB.Session.Exec(`INSERT INTO videos (id, url)
+	_, err := DB.Exec(`INSERT INTO videos (id, url)
 	SELECT $1::VARCHAR, $2 WHERE NOT EXISTS
 	(SELECT 1 FROM videos WHERE id = $1)`, v.ID, v.URL)
 	if err != nil {
@@ -53,7 +53,7 @@ func (v *Video) InsertVideo() {
 
 // GetAllUrls - ...
 func GetAllUrls() []Video {
-	rows, err := DB.Session.Query(`SELECT id, url, uploaddate, channel, title, created FROM VIDEOS`)
+	rows, err := DB.Query(`SELECT id, url, uploaddate, channel, title, created FROM VIDEOS`)
 	if err != nil {
 		log.Printf(err.Error())
 	}
@@ -82,7 +82,7 @@ type Statistic struct {
 
 // Insert - ...
 func (s *Statistic) Insert() {
-	_, err := DB.Session.Exec(`INSERT INTO public.statistic
+	_, err := DB.Exec(`INSERT INTO public.statistic
 	("views", likes, dislikes, channel, channelname, followers, video)
 	VALUES($1::int, $2::int, $3::int, $4, $5, $6, $7);`, s.Views, s.Likes, s.Dislikes, s.ChannelID, s.ChannelName, s.Followers, s.Video)
 	if err != nil {
@@ -92,7 +92,7 @@ func (s *Statistic) Insert() {
 
 // InsertVideo - ...
 func (s *Statistic) InsertVideo(url string) bool {
-	result, err := DB.Session.Exec(`INSERT INTO public.videos
+	result, err := DB.Exec(`INSERT INTO public.videos
 	(id, url, uploaddate, channel, title)
 	select $1::varchar, $2, $3, $4, $5
 	where not exists(select 1 from videos where id = $1::varchar);`, s.ID, url, s.UploadDate, s.ChannelID, s.Title)
@@ -121,7 +121,7 @@ type StatisticSlice struct {
 // GetStat - ...
 func GetStat() []StatisticSlice {
 	var stat []StatisticSlice
-	rows, err := DB.Session.Query(`select
+	rows, err := DB.Query(`select
 		v.id, v.created, v.url, v.title, array_agg(s.updated), array_agg("views"), array_agg(likes), array_agg(dislikes)
 		from videos as v
 		join statistic as s on s.video = v.id

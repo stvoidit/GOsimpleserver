@@ -12,10 +12,12 @@ import (
 
 // DB - ...
 var DB = Store{}
-var cnf = config{}
+
+// Config - ...
+var Config = config{}
 
 func init() {
-	cnf.readConfig()
+	Config.readConfig()
 	DB.connect()
 }
 
@@ -25,6 +27,7 @@ type config struct {
 	login    string
 	password string
 	dbname   string
+	Secret   []byte
 }
 
 func (c *config) readConfig() {
@@ -44,27 +47,34 @@ func (c *config) readConfig() {
 	c.login = login.String()
 	c.password = password.String()
 	c.dbname = dbname.String()
+
+	application := cfg.Section("application")
+	secret, err := application.GetKey("secret")
+	if err != nil {
+		c.Secret = []byte("VeryBadSecretKey")
+	}
+	c.Secret = []byte(secret.String())
 }
 
 // Store - ...
 type Store struct {
-	Session *sql.DB
+	*sql.DB
 }
 
 // Connect - ....
 func (s *Store) connect() {
 	conn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		cnf.host, cnf.port, cnf.login, cnf.password, cnf.dbname)
+		Config.host, Config.port, Config.login, Config.password, Config.dbname)
 	db, err := sql.Open("postgres", conn)
 	if err != nil {
 		panic(err)
 	}
-	s.Session = db
+	s.DB = db
 	s.existsTables()
 }
 
 func (s *Store) existsTables() {
-	err := s.Session.Ping()
+	err := s.Ping()
 	if err != nil {
 		panic(err)
 	}
@@ -122,7 +132,7 @@ func (s *Store) creatreTables() {
 	end;
 	$$;`,
 		"MySecretKey")
-	_, err := s.Session.Exec(tableUsers)
+	_, err := s.Exec(tableUsers)
 	if err != nil {
 		panic(err)
 	}
@@ -136,7 +146,7 @@ func (s *Store) creatreTables() {
 		title varchar NOT NULL,
 		CONSTRAINT videos_un UNIQUE (id));
 		CREATE UNIQUE INDEX IF NOT EXISTS videos_un ON public.videos USING btree (id);`
-	s.Session.Exec(tableVideos)
+	s.Exec(tableVideos)
 
 	tableStatistic := `CREATE TABLE IF NOT EXISTS public.statistic (
 		id serial NOT NULL,
@@ -150,5 +160,5 @@ func (s *Store) creatreTables() {
 		video varchar NULL,
 		CONSTRAINT statistic_fk FOREIGN KEY (video) REFERENCES videos(id) ON UPDATE CASCADE ON DELETE SET NULL);
 		CREATE INDEX IF NOT EXISTS statistic_channel_idx ON public.statistic USING btree (channel);`
-	s.Session.Exec(tableStatistic)
+	s.Exec(tableStatistic)
 }

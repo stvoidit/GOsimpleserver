@@ -12,8 +12,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-const secretKey = "MySecretKey"
-
 // TokenClaim - token custom type
 type TokenClaim struct {
 	store.User
@@ -34,7 +32,7 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 			ExpiresAt: time.Now().Add(time.Duration(15 * time.Minute)).Unix(),
 		}}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-		tokenString, err := token.SignedString([]byte(secretKey))
+		tokenString, err := token.SignedString(store.Config.Secret)
 		if err != nil {
 			panic(err)
 		}
@@ -73,7 +71,7 @@ func checkToken(tokenString string) (*store.User, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("bad")
 		}
-		return []byte(secretKey), nil
+		return store.Config.Secret, nil
 	})
 	if err != nil {
 		return &store.User{}, err

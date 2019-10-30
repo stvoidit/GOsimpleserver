@@ -138,28 +138,9 @@ func AddNew(url string, client *http.Client, wg *sync.WaitGroup) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	s.InsertVideo(url)
-	s.Insert()
-	// if result {
-	// 	s.Insert()
-	// }
+	result := s.InsertVideo(url)
+	if result {
+		s.Insert()
+	}
 	wg.Done()
 }
-
-// func main() {
-// 	url := "https://www.youtube.com/watch?v=nH2qi4FoJ7M"
-// 	client := &http.Client{}
-// 	r, err := client.Get(url)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	b, err := ioutil.ReadAll(r.Body)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	youtube, err := ParseYoutube(b)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	fmt.Printf("%+v", youtube)
-// }
