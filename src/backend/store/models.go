@@ -82,6 +82,9 @@ type Statistic struct {
 
 // Insert - ...
 func (s *Statistic) Insert() {
+	if s.ChannelID == "" || s.ChannelName == "" {
+		return
+	}
 	_, err := DB.Exec(`INSERT INTO public.statistic
 	("views", likes, dislikes, channel, channelname, followers, video)
 	VALUES($1::int, $2::int, $3::int, $4, $5, $6, $7);`, s.Views, s.Likes, s.Dislikes, s.ChannelID, s.ChannelName, s.Followers, s.Video)

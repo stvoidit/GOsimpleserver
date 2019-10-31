@@ -27,7 +27,7 @@ func getURL(link chan store.Video, results chan<- store.Statistic) {
 			stat, err := services.ParseYoutube(b)
 			stat.Video = url.ID
 			if err != nil {
-				log.Fatalln(err.Error())
+				log.Println(url.URL, err.Error())
 			}
 			results <- stat
 		default:

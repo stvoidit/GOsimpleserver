@@ -87,17 +87,23 @@ type YouTube struct {
 func ParseYoutube(html []byte) (store.Statistic, error) {
 	pattern := regexp.MustCompile(`'RELATED_PLAYER_ARGS': (.*),\n`)
 	data := pattern.FindSubmatch(html)
+	// ioutil.WriteFile("___peace.json", data[1], 0666)
 	replacer := strings.NewReplacer(`//`, ``, `""`, `"`)
 	cv := new(store.Statistic)
 	if len(data) > 1 {
 		youtube := new(YouTube)
 		js := replacer.Replace(string(data[1]))
+
 		// ioutil.WriteFile("___raw.json", []byte(js), 0666)
+
 		json.Unmarshal([]byte(js), &youtube)
 		json.Unmarshal([]byte(youtube.RawWNR), &youtube.WNR)
+		if youtube.RawWNR == "" {
+			return *cv, errors.New("not found RawWNR")
+		}
 		youtube.RawWNR = ""
 
-		// bjson, _ := json.Marshal(youtube)
+		// bjson, _ := json.Marshal(youtube.WNR)
 		// ioutil.WriteFile("___parse.json", bjson, 0666)
 
 		clearPatternVideo := regexp.MustCompile(`[^\d]+`)
@@ -136,7 +142,7 @@ func AddNew(url string, client *http.Client, wg *sync.WaitGroup) {
 	b, _ := ioutil.ReadAll(response.Body)
 	s, err := ParseYoutube(b)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println(url, err.Error())
 	}
 	result := s.InsertVideo(url)
 	if result {
