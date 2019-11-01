@@ -22,8 +22,17 @@ func getURL(link chan store.Video, results chan<- store.Statistic) {
 				log.Fatalln(url, err)
 			}
 			req.Header.Set("user-agent", "Chrome/78.0.3904.70")
-			response, _ := client.Do(req)
-			b, _ := ioutil.ReadAll(response.Body)
+			response, err := client.Do(req)
+			if err != nil {
+				fmt.Println(url.URL)
+				results <- store.Statistic{}
+				return
+			}
+			b, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				results <- store.Statistic{}
+				return
+			}
 			stat, err := services.ParseYoutube(b)
 			stat.Video = url.ID
 			if err != nil {
@@ -48,6 +57,7 @@ func worker(urls []store.Video, threads int) []store.Statistic {
 	for _, url := range urls {
 		links <- url
 	}
+	close(links)
 
 	var data []store.Statistic
 loop:

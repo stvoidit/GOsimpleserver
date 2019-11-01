@@ -1,4 +1,5 @@
 go-build:
 	go build -o ./build/app ./src/backend/app.go
-	cd src/frontend/ && npm run build
+	go build -o ./build/monitor ./src/backend/services/monitor.go
 	cp ./config.ini ./build
+	cd src/frontend/ && npm run build
