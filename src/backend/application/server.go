@@ -35,6 +35,8 @@ func (app *App) routers() {
 
 	api := app.apiRouter()
 	api.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")
+	api.HandleFunc("/UserVideos", routers.UserVideos).Methods("GET")
+	api.HandleFunc("/UserChannels", routers.UserChannels).Methods("GET")
 
 	private := app.cookieRouter()
 	private.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")

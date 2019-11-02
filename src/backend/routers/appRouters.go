@@ -11,8 +11,12 @@ import (
 
 // UserVideos - ...
 func UserVideos(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	result := store.GetStat(q.Get("chanId"))
+	q := r.URL.Query().Get("chanId")
+	if q == "" {
+		Jsonify(w, "Pleace choise channel ID", 200)
+		return
+	}
+	result := store.GetStat(q)
 	Jsonify(w, result, 200)
 }
 

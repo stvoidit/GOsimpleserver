@@ -41,6 +41,7 @@ func getURL(link chan store.Video, results chan<- store.Statistic, wg *sync.Wait
 		if err != nil {
 			continue
 		}
+		defer response.Body.Close()
 		stat, err := services.ParseYoutube(b)
 		if err != nil {
 			logger.Println(url.URL, err.Error())

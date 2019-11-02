@@ -3,6 +3,7 @@ package routers
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"path"
 	"strings"
@@ -23,6 +24,7 @@ func Jsonify(w http.ResponseWriter, i interface{}, code int) {
 
 // JSONLoad - преобразование json в структуру
 func JSONLoad(req *http.Request, i interface{}) (interface{}, error) {
+	defer req.Body.Close()
 	decoder := json.NewDecoder(req.Body)
 	err := decoder.Decode(&i)
 	if err != nil {
@@ -40,7 +42,8 @@ var tmp = make(TemplatesMap)
 func RegistrateTemplates(tmpPath string) {
 	files, err := ioutil.ReadDir(tmpPath)
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return
 	}
 	for _, file := range files {
 		fullpath := path.Join(tmpPath, file.Name())

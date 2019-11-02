@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -135,11 +136,17 @@ func ParseYoutube(html []byte) (store.Statistic, error) {
 
 // AddNew - ...
 func AddNew(url string, client *http.Client, wg *sync.WaitGroup) {
+	defer wg.Done()
 	wg.Add(1)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("user-agent", "Chrome/78.0.3904.70")
 	response, _ := client.Do(req)
-	b, _ := ioutil.ReadAll(response.Body)
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	response.Body.Close()
 	s, err := ParseYoutube(b)
 	if err != nil {
 		fmt.Println(url, err.Error())
@@ -148,5 +155,4 @@ func AddNew(url string, client *http.Client, wg *sync.WaitGroup) {
 	if result {
 		s.Insert()
 	}
-	wg.Done()
 }
