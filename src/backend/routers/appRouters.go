@@ -22,7 +22,11 @@ func UserVideos(w http.ResponseWriter, r *http.Request) {
 
 // UserChannels - ..
 func UserChannels(w http.ResponseWriter, r *http.Request) {
-	result := store.GetAllChanels()
+	result, err := store.GetAllChanels()
+	if err != nil {
+		Jsonify(w, err.Error(), 509)
+		return
+	}
 	Jsonify(w, result, 200)
 }
 

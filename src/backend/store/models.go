@@ -155,16 +155,16 @@ type Channel struct {
 }
 
 // GetAllChanels - ...
-func GetAllChanels() []Channel {
+func GetAllChanels() ([]Channel, error) {
 	var channels []Channel
 	rows, err := DB.Query(`select * from all_channels`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	for rows.Next() {
 		var ch Channel
 		rows.Scan(&ch.Name, &ch.ID)
 		channels = append(channels, ch)
 	}
-	return channels
+	return channels, nil
 }
