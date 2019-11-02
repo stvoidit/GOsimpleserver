@@ -29,9 +29,10 @@ func (app *App) routers() {
 	routers.RegistrateTemplates(path.Join(staticPath, "templates"))
 
 	public := app.Router
-	public.HandleFunc("/login", routers.Login)
+	public.HandleFunc("/login", routers.Login).Methods("POST")
+	public.HandleFunc("/login", routers.LoginScreen).Methods("GET")
 	public.HandleFunc("/logout", routers.LogOut)
-	public.HandleFunc("/get-token", routers.GetTokenHandler)
+	public.HandleFunc("/get-token", routers.GetTokenHandler).Methods("GET")
 
 	api := app.apiRouter()
 	api.HandleFunc("/AddVideo", routers.AddVideo).Methods("POST")

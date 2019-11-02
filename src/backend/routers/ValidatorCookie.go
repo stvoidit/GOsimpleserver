@@ -30,25 +30,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("login:", err)
 	}
-	if r.Method == "POST" {
-		var au store.User
-		JSONLoad(r, &au)
-		verify := au.CheckPassword()
-		if !verify {
-			m := map[string]string{"status": "incorrect login or password"}
-			Jsonify(w, m, 200)
-			return
-		}
-		ses.Values["Profile"] = au
-		_ = ses.Save(r, w)
-		m := map[string]string{"status": "ok", "goto": ref}
+	var au store.User
+	JSONLoad(r, &au)
+	verify := au.CheckPassword()
+	if !verify {
+		m := map[string]string{"status": "incorrect login or password"}
 		Jsonify(w, m, 200)
 		return
 	}
-	if r.Method == "GET" {
-		RenderTemplate(w, "login")
-		return
-	}
+	ses.Values["Profile"] = au
+	_ = ses.Save(r, w)
+	m := map[string]string{"status": "ok", "goto": ref}
+	Jsonify(w, m, 200)
 }
 
 // LogOut - reset session cookie
