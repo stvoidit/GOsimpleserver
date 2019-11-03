@@ -3,9 +3,19 @@ limit_req_zone $binary_remote_addr zone=default:100m rate=10r/s;
 
 server {
     listen 127.0.0.1:80;
+    listen [::]:80;
+    listen 80;
 #    server_name mygoapp.loc;
     port_in_redirect off;
     client_max_body_size 100m;
+
+    location ~* /(css|js|static)/.*/.+.(ico|css|html|js|gif|jpe?g|png)$ {
+        proxy_pass http://127.0.0.1:9000;
+        access_log off;
+        expires 3d;
+        add_header Cache-Control public;
+        tcp_nodelay off;
+    }
 
     location /login {
         proxy_pass http://127.0.0.1:9000/login;
