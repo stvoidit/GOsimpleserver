@@ -1,40 +1,45 @@
-limit_req_zone $binary_remote_addr zone=login:100m rate=1r/s;
-limit_req_zone $binary_remote_addr zone=default:100m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=login:100m rate=3r/s;
+limit_req_zone $binary_remote_addr zone=default:200m rate=30r/s;
 
 server {
-    listen 127.0.0.1:80;
-    listen [::]:80;
     listen 80;
-#    server_name mygoapp.loc;
+    listen [::]:80;
+    #server_name mygoapp.loc;
     port_in_redirect off;
     client_max_body_size 100m;
 
-    location ~* /(css|js|static)/.*/.+.(ico|css|html|js|gif|jpe?g|png)$ {
-        proxy_pass http://127.0.0.1:9000;
+    location ~* /(css|js|static)/.* {
+        proxy_pass http://127.0.0.1:9000$request_uri;
         access_log off;
         expires 3d;
         add_header Cache-Control public;
         tcp_nodelay off;
+        proxy_set_headerHost   $host;
+        proxy_set_headerX-Real-IP  $remote_addr;
+        proxy_set_headerX-Forwarded-For$proxy_add_x_forwarded_for;
+        proxy_set_headerX-Forwarded-Host   $host:80;
+        proxy_set_headerX-Forwarded-Server $host;
+        proxy_set_headerX-Forwarded-Port   80;
+        proxy_pass_request_headers  on;
     }
 
     location /login {
-        proxy_pass http://127.0.0.1:9000/login;
-        limit_req zone=login burst=3 nodelay;
-        limit_req_status 429;
-}
+    proxy_pass http://127.0.0.1:9000/login;
+    limit_req zone=login burst=3 nodelay;
+    limit_req_status 429;
+    }
 
-    location / {
-        proxy_pass http://127.0.0.1:9000;
-        limit_req zone=default;
+    location ~ ^/(?!css|js|static) {
+        proxy_pass http://127.0.0.1:9000$request_uri;
+        limit_req zone=default burst=30;
         limit_req_status 429;
-
-        proxy_set_header        Host               $host;
-        proxy_set_header        X-Real-IP          $remote_addr;
-        proxy_set_header        X-Forwarded-For    $proxy_add_x_forwarded_for;
-        proxy_set_header        X-Forwarded-Host   $host:80;
-        proxy_set_header        X-Forwarded-Server $host;
-        proxy_set_header        X-Forwarded-Port   80;
-    #    proxy_set_header        X-Forwarded-Proto  https;
-        proxy_pass_request_headers      on;
-       }
+        proxy_set_headerHost   $host;
+        proxy_set_headerX-Real-IP  $remote_addr;
+        proxy_set_headerX-Forwarded-For$proxy_add_x_forwarded_for;
+        proxy_set_headerX-Forwarded-Host   $host:80;
+        proxy_set_headerX-Forwarded-Server $host;
+        proxy_set_headerX-Forwarded-Port   80;
+        proxy_set_headerX-Forwarded-Proto  https;
+        proxy_pass_request_headers  on;
+    }
 }
