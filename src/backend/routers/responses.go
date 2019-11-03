@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path"
 	"strings"
+	"sync"
 )
 
 // Jsonify - отправка json response
@@ -34,9 +35,12 @@ func JSONLoad(req *http.Request, i interface{}) (interface{}, error) {
 }
 
 // TemplatesMap - ...
-type TemplatesMap map[string][]byte
+type TemplatesMap struct {
+	sync.RWMutex
+	template map[string][]byte
+}
 
-var tmp = make(TemplatesMap)
+var tmp = TemplatesMap{template: make(map[string][]byte)}
 
 // RegistrateTemplates - ...
 func RegistrateTemplates(tmpPath string) {
@@ -52,11 +56,13 @@ func RegistrateTemplates(tmpPath string) {
 		if err != nil {
 			panic(err)
 		}
-		tmp[filename] = bfile
+		tmp.template[filename] = bfile
 	}
 }
 
 // RenderTemplate - ...
 func RenderTemplate(w http.ResponseWriter, name string) {
-	w.Write(tmp[name])
+	tmp.RLock()
+	defer tmp.RUnlock()
+	w.Write(tmp.template[name])
 }
