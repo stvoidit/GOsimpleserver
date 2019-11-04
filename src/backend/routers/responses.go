@@ -15,12 +15,18 @@ func Jsonify(w http.ResponseWriter, i interface{}, code int) {
 	switch i.(type) {
 	default:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(code)
+		encoder := json.NewEncoder(w)
+		encoder.Encode(i)
 	case string:
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(code)
+		w.Write([]byte(i.(string)))
+	case []byte:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(code)
+		w.Write(i.([]byte))
 	}
-	w.WriteHeader(code)
-	encoder := json.NewEncoder(w)
-	encoder.Encode(i)
 }
 
 // JSONLoad - преобразование json в структуру

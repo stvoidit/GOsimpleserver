@@ -16,8 +16,14 @@ func UserVideos(w http.ResponseWriter, r *http.Request) {
 		Jsonify(w, "Pleace choise channel ID", 200)
 		return
 	}
-	result := store.GetStat(q)
-	Jsonify(w, result, 200)
+	result, err := store.Redis.GetCache(q)
+	if err != nil {
+		result := store.GetStat(q)
+		store.Redis.SetJSON(q, result)
+		Jsonify(w, result, 200)
+		return
+	}
+	Jsonify(w, string(result), 200)
 }
 
 // UserChannels - ..
