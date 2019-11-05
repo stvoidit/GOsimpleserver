@@ -151,8 +151,6 @@ func AddNew(url string, client *http.Client, wg *sync.WaitGroup) {
 	if err != nil {
 		fmt.Println(url, err.Error())
 	}
-	result := s.InsertVideo(url)
-	if result {
-		s.Insert()
-	}
+	s.InsertVideo(url)
+	s.Insert()
 }
