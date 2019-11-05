@@ -83,6 +83,7 @@ type Statistic struct {
 // Insert - ...
 func (s *Statistic) Insert() {
 	if s.ChannelID == "" || s.ChannelName == "" {
+		log.Printf("not insert %+v", s)
 		return
 	}
 	_, err := DB.Exec(`INSERT INTO public.statistic

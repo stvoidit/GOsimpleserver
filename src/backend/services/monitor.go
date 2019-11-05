@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,21 +32,24 @@ func getURL(link chan store.Video, results chan<- store.Statistic, wg *sync.Wait
 		if err != nil {
 			logger.Println(url.URL, err.Error())
 		}
-		req.Header.Set("user-agent", "Chrome/78.0.3904.70")
+		req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 YaBrowser/19.10.2.195 Yowser/2.5 Safari/537.36")
 		response, err := client.Do(req)
 		if err != nil {
 			continue
 		}
 		b, err := ioutil.ReadAll(response.Body)
+		if strings.Contains(string(b), "action_recaptcha_verify2") {
+			logger.Println("recapcha detected!")
+			continue
+		}
 		if err != nil {
 			continue
 		}
 		defer response.Body.Close()
-		stat, err := services.ParseYoutube(b)
+		stat, err := services.ParseYoutube(b, url.ID)
 		if err != nil {
 			logger.Println(url.URL, err.Error())
 		}
-		stat.Video = url.ID
 		results <- stat
 	}
 }
@@ -86,5 +89,5 @@ func main() {
 	for _, s := range data {
 		s.Insert()
 	}
-	fmt.Println("done")
+	logger.Println("done")
 }
